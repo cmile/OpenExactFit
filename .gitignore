@@ -1,0 +1,20 @@
+.venv/
+__pycache__/
+*.pyc
+*.sqlite
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# android studio / gradle
+.gradle/
+.idea/
+.kotlin/
+build/
+app/build/
+local.properties
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
