@@ -1,4 +1,4 @@
-package com.example.openexactfit
+package de.cmile.openexactfit
 
 import org.junit.Test
 

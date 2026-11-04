@@ -1,4 +1,4 @@
-package com.example.openexactfit.ui.theme
+package de.cmile.openexactfit.ui.theme
 
 import android.app.Activity
 import android.os.Build

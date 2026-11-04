@@ -1,4 +1,4 @@
-package com.example.openexactfit.ui.theme
+package de.cmile.openexactfit.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

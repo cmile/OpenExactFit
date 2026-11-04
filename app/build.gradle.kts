@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.openexactfit"
+    namespace = "de.cmile.openexactfit"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.example.openexactfit"
+        applicationId = "de.cmile.openexactfit"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
