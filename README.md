@@ -35,9 +35,10 @@ membership in the `bluetooth` group, or run via `sudo -E`).
 ## use
 
 ```bash
-exactfit listen            # scan, connect, print and store until the monitor switches off
-exactfit listen --forever  # daemon style: scan again after every session
-exactfit history           # download what the monitor still holds for the app
+exactfit sync              # the everyday command: fetch stored readings, then stay for live ones
+exactfit sync --forever    # daemon style: scan again after every session
+exactfit listen            # live readings only
+exactfit history           # stored readings only (deletes nothing on the monitor)
 exactfit list              # stored measurements
 exactfit list --user A
 exactfit export > bp.csv   # csv on stdout
@@ -48,9 +49,12 @@ the database lives in `~/.local/share/exactfit/measurements.sqlite` unless
 `--db` says otherwise. duplicate notifications (same device, same raw bytes) are
 stored once.
 
-workflow: start `exactfit listen`, switch the monitor on and measure. the monitor
-advertises as soon as it is on, drops the connection about a minute after the
-measurement when it switches itself off.
+workflow: start `exactfit sync`, switch the monitor on and measure. the monitor
+advertises as soon as it is on; `sync` first collects what it stored while
+nothing was listening, then prints each new reading as it happens. the monitor
+drops the connection about a minute after a measurement when it switches
+itself off, which ends the session. readings the monitor has delivered live
+are not offered as stored readings again, so nothing is ever fetched twice.
 
 ## protocol
 

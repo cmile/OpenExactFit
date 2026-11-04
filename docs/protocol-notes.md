@@ -96,6 +96,10 @@ notif 991dee0f  -> 1e 7600 4c00 0000 ea07 01 0e 07 23 00 4400 00 0000
 the answer arrived within the 5 s window, in the live-record layout, with
 `0000` where live records carry `5a00`. no pairing write was needed first.
 
+**device.** a requested reading stays pending: the same `02 3c 01 00` and the
+same record came back on the next connection (2026-11-05 00:07). only the
+app's delete command clears it, so this tool relies on its own deduplication.
+
 **device.** two readings taken earlier the same evening *while a client was
 subscribed to the live characteristic* were not pending. the monitor marks a
 reading as delivered once it has notified it live, so `listen` and `history`
