@@ -58,6 +58,11 @@ itself off, which ends the session. readings the monitor has delivered live
 may or may not be offered as stored readings again; the database keeps one
 copy either way, and nothing is ever deleted on the monitor.
 
+using braun's app as well: let this tool (or the android app below) sync
+first, then the vendor app. the vendor app deletes what it fetched from the
+monitor's bluetooth side, and those readings cannot be requested again by
+anyone, although the monitor's own display still shows them.
+
 ## android app
 
 `app/` is the phone app, kotlin and jetpack compose, package `de.cmile.openexactfit`,

@@ -110,6 +110,14 @@ with different raw bytes, and both tools key their deduplication on monitor,
 user, timestamp and the three values rather than on the raw record. what
 decides whether a live reading becomes pending is still unknown.
 
+**device.** the vendor app's delete does not touch what the monitor's own
+display shows, all readings remain visible there. it does take them out of
+reach over bluetooth: with the counter at `02 3c 00 00` after the vendor app
+had synced, requests for index 0 of either user got no answer at all, neither
+a record nor an error notification (2026-11-05). so a reading the vendor app
+has fetched cannot be fetched again by anyone else; when both apps are in
+use, this tool has to sync first.
+
 ## battery `2a19`
 
 **device.** reads `00` here too; upstream saw notifications of `82` later.
