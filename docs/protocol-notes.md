@@ -101,9 +101,14 @@ same record came back on the next connection (2026-11-05 00:07). only the
 app's delete command clears it, so this tool relies on its own deduplication.
 
 **device.** two readings taken earlier the same evening *while a client was
-subscribed to the live characteristic* were not pending. the monitor marks a
-reading as delivered once it has notified it live, so `listen` and `history`
-together cover everything without deleting anything on the monitor.
+subscribed to the live characteristic* were not pending, which suggested the
+monitor marks a reading as delivered once it has notified it live. that does
+not hold in general: the reading of 2026-11-05 00:08 was notified live to
+`sync` and came back as pending (`02 3c 02 00`) on the next connection, seven
+hours later, with bytes 5..6 now `0000`. so the same reading can arrive twice
+with different raw bytes, and both tools key their deduplication on monitor,
+user, timestamp and the three values rather than on the raw record. what
+decides whether a live reading becomes pending is still unknown.
 
 ## battery `2a19`
 

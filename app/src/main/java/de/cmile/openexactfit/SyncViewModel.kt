@@ -1,6 +1,7 @@
 package de.cmile.openexactfit
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import de.cmile.openexactfit.ble.ExactFitClient
@@ -68,7 +69,13 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     fun csv(): String = store.csv()
 
     private fun log(text: String) {
+        Log.i(TAG, text)
         val stamp = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         _state.update { it.copy(log = (it.log + "$stamp  $text").takeLast(50)) }
+    }
+
+    companion object {
+        /** `adb logcat -s OpenExactFit` follows a sync from the shell */
+        const val TAG = "OpenExactFit"
     }
 }

@@ -23,9 +23,15 @@ create table if not exists measurements (
     map_field integer not null,
     pulse integer,
     flags text,
-    raw_hex text not null,
-    unique (device, raw_hex)
+    raw_hex text not null
 );
+-- one row per reading. the monitor sends the same reading twice with different
+-- raw bytes (live and from storage, bytes 5..6 differ), so raw_hex cannot be the key.
+create unique index if not exists measurements_reading on measurements (
+    device, coalesce(user, ''), coalesce(measured_at, ''),
+    systolic, diastolic, coalesce(pulse, -1)
+);
+pragma user_version = 2;
 """
 
 COLUMNS = ("id", "device", "user", "measured_at", "received_at",
@@ -36,17 +42,35 @@ class Store:
     def __init__(self, path: Path) -> None:
         self.conn = sqlite3.connect(path)
         self.conn.row_factory = sqlite3.Row
-        self.conn.executescript(SCHEMA)
         self._migrate()
+        self.conn.executescript(SCHEMA)
 
     def _migrate(self) -> None:
         cols = {row[1] for row in self.conn.execute("pragma table_info(measurements)")}
+        if not cols:
+            return  # fresh file, SCHEMA creates everything
         if "map" in cols:  # schema before 2026-11-04, when the field was believed to be the map
             with self.conn:
                 self.conn.execute("alter table measurements rename column map to map_field")
+        version = self.conn.execute("pragma user_version").fetchone()[0]
+        if version < 2:
+            # schema before 2026-11-05 keyed rows on (device, raw_hex) as a table
+            # constraint. sqlite cannot drop that, so rebuild the table; the new
+            # index then also collapses readings that were stored twice.
+            self.conn.executescript(
+                "begin;"
+                "alter table measurements rename to measurements_old;"
+                + SCHEMA.replace("pragma user_version = 2;", "")
+                + "insert or ignore into measurements (device, user, measured_at, received_at,"
+                " systolic, diastolic, map_field, pulse, flags, raw_hex)"
+                " select device, user, measured_at, received_at, systolic, diastolic,"
+                " map_field, pulse, flags, raw_hex from measurements_old order by id;"
+                "drop table measurements_old;"
+                "commit;"
+            )
 
     def add(self, m: Measurement, device: str) -> bool:
-        """store a measurement; returns False if the same raw record was already stored."""
+        """store a measurement; returns False if this reading was already stored."""
         try:
             with self.conn:
                 self.conn.execute(

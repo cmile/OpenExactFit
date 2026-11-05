@@ -116,6 +116,41 @@ def test_store_deduplicates(tmp_path):
     assert store.all(user="B") == []
 
 
+def test_store_treats_live_and_stored_copy_as_one(tmp_path):
+    # the same reading as the monitor notified it live (bytes 5..6 = 90) and as
+    # it later came out of storage (bytes 5..6 = 0)
+    live = protocol.parse_measurement(bytes.fromhex("1e840056005a00ea07010f1509004e00000000"))
+    stored = protocol.parse_measurement(bytes.fromhex("1e840056000000ea07010f1509004e00000000"))
+    store = Store(tmp_path / "t.sqlite")
+    assert store.add(live, "aa:bb") is True
+    assert store.add(stored, "aa:bb") is False
+    assert store.add(stored, "cc:dd") is True  # another monitor is another reading
+
+
+def test_store_migrates_raw_hex_key(tmp_path):
+    import sqlite3
+    path = tmp_path / "old.sqlite"
+    conn = sqlite3.connect(path)
+    conn.executescript("""
+        create table measurements (
+            id integer primary key, device text, user text, measured_at text,
+            received_at text not null, systolic integer not null, diastolic integer not null,
+            map_field integer not null, pulse integer, flags text, raw_hex text not null,
+            unique (device, raw_hex));
+        insert into measurements values
+            (1, 'x', 'A', '2026-01-15 21:09:00', 'r1', 132, 86, 90, 78, '', '1e840056005a00'),
+            (2, 'x', 'A', '2026-01-15 21:09:00', 'r2', 132, 86, 0, 78, '', '1e840056000000'),
+            (3, 'x', 'A', '2026-01-15 21:10:00', 'r3', 120, 80, 0, 70, '', '00');
+    """)
+    conn.commit(); conn.close()
+    store = Store(path)
+    rows = store.all()
+    assert [r["received_at"] for r in rows] == ["r1", "r3"]  # first copy wins
+    assert store.conn.execute("pragma user_version").fetchone()[0] == 2
+    assert store.add(protocol.parse_measurement(bytes.fromhex("1e840056000000ea07010f1509004e00000000")), "x") is False
+    Store(path)  # migrating twice is a no-op
+
+
 # --- aes and commands --------------------------------------------------------
 
 from exactfit import aes

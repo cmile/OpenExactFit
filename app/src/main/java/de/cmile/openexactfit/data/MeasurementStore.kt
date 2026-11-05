@@ -23,7 +23,7 @@ data class StoredReading(
     val rawHex: String,
 )
 
-class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measurements.sqlite", null, 1) {
+class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measurements.sqlite", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -38,15 +38,36 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
                 map_field integer not null,
                 pulse integer,
                 flags text,
-                raw_hex text not null,
-                unique (device, raw_hex)
+                raw_hex text not null
+            )"""
+        )
+        // one row per reading. the monitor sends the same reading twice with different
+        // raw bytes (live and from storage, bytes 5..6 differ), so raw_hex cannot be the key.
+        db.execSQL(
+            """create unique index measurements_reading on measurements (
+                device, coalesce(user, ''), coalesce(measured_at, ''),
+                systolic, diastolic, coalesce(pulse, -1)
             )"""
         )
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            // version 1 keyed rows on (device, raw_hex) as a table constraint, which
+            // sqlite cannot drop: rebuild, collapsing readings that were stored twice.
+            db.execSQL("alter table measurements rename to measurements_old")
+            onCreate(db)
+            db.execSQL(
+                """insert or ignore into measurements (device, user, measured_at, received_at,
+                    systolic, diastolic, map_field, pulse, flags, raw_hex)
+                   select device, user, measured_at, received_at, systolic, diastolic,
+                    map_field, pulse, flags, raw_hex from measurements_old order by id"""
+            )
+            db.execSQL("drop table measurements_old")
+        }
+    }
 
-    /** stores a reading; false if the same raw record from the same monitor is already there. */
+    /** stores a reading; false if this reading from this monitor is already there. */
     fun add(m: Protocol.Measurement, device: String): Boolean {
         val values = ContentValues().apply {
             put("device", device)

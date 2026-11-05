@@ -16,6 +16,7 @@ import android.content.Context
 import android.os.Build
 import android.os.ParcelUuid
 import de.cmile.openexactfit.ble.Protocol.toHex
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -113,6 +114,8 @@ class ExactFitClient(private val context: Context) {
                 handle(payload, "live", device.address, onEvent)?.let { count++ }
             }
             onEvent(Event.Log(if (gatt.isDisconnected) "monitor switched off" else "no reading for a while, done"))
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             onEvent(Event.Log("error: ${e.message ?: e.javaClass.simpleName}"))
         } finally {

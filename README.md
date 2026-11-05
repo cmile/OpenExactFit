@@ -46,15 +46,17 @@ exactfit explore           # dump gatt table and readable characteristics (no wr
 ```
 
 the database lives in `~/.local/share/exactfit/measurements.sqlite` unless
-`--db` says otherwise. duplicate notifications (same device, same raw bytes) are
-stored once.
+`--db` says otherwise. a reading is stored once per monitor, keyed on user,
+timestamp, systolic, diastolic and pulse: the monitor can deliver the same
+reading live and later again from storage, with slightly different raw bytes.
 
 workflow: start `exactfit sync`, switch the monitor on and measure. the monitor
 advertises as soon as it is on; `sync` first collects what it stored while
 nothing was listening, then prints each new reading as it happens. the monitor
 drops the connection about a minute after a measurement when it switches
 itself off, which ends the session. readings the monitor has delivered live
-are not offered as stored readings again, so nothing is ever fetched twice.
+may or may not be offered as stored readings again; the database keeps one
+copy either way, and nothing is ever deleted on the monitor.
 
 ## android app
 
@@ -68,7 +70,7 @@ with the same columns as the python tool. `app/src/main/java/de/cmile/openexactf
 | --- | --- |
 | `ble/Protocol.kt` | port of `exactfit/protocol.py`, aes through `javax.crypto` |
 | `ble/ExactFitClient.kt` | scan, connect, stored readings, then live readings; gatt calls serialized over coroutines |
-| `data/MeasurementStore.kt` | sqlite, deduplicated on monitor address plus raw bytes |
+| `data/MeasurementStore.kt` | sqlite, same schema and deduplication as the python tool |
 | `SyncViewModel.kt`, `MainActivity.kt` | state and the compose screen |
 
 build with android studio, or `./gradlew :app:assembleDebug` with `JAVA_HOME`
