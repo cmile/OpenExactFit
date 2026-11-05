@@ -56,6 +56,29 @@ drops the connection about a minute after a measurement when it switches
 itself off, which ends the session. readings the monitor has delivered live
 are not offered as stored readings again, so nothing is ever fetched twice.
 
+## android app
+
+`app/` is the phone app, kotlin and jetpack compose, package `de.cmile.openexactfit`,
+minimum android 7 (api 24). first draft: one screen with a sync button, the
+readings list and a csv export through the share sheet. it does what
+`exactfit sync` does, over the android gatt api, and keeps its own sqlite file
+with the same columns as the python tool. `app/src/main/java/de/cmile/openexactfit/`:
+
+| file | what |
+| --- | --- |
+| `ble/Protocol.kt` | port of `exactfit/protocol.py`, aes through `javax.crypto` |
+| `ble/ExactFitClient.kt` | scan, connect, stored readings, then live readings; gatt calls serialized over coroutines |
+| `data/MeasurementStore.kt` | sqlite, deduplicated on monitor address plus raw bytes |
+| `SyncViewModel.kt`, `MainActivity.kt` | state and the compose screen |
+
+build with android studio, or `./gradlew :app:assembleDebug` with `JAVA_HOME`
+pointing at a jdk 17 or newer. `./gradlew :app:testDebugUnitTest` runs the
+protocol tests against the same captured bytes as the python tests.
+
+permissions: android 12 and newer ask for "nearby devices" (bluetooth scan and
+connect, declared `neverForLocation`); older versions need fine location, as
+every ble scan does there.
+
 ## protocol
 
 `docs/protocol-notes.md` holds everything known: captures from the monitor and
