@@ -13,10 +13,13 @@ google account.
 - stored history: **working**, verified 2026-11-04. `exactfit history` does the
   download the vendor app does, taken from the app's own code (see
   `docs/protocol-notes.md`), and unlike the app deletes nothing on the monitor.
-  readings already delivered live are not offered again by the monitor.
+- android app: **first draft working**, verified 2026-11-05 on android 15. see
+  below.
 - setting the clock: write format known from the app, not implemented yet.
 - encryption: newer firmware than 1.0.14 wraps commands and records in aes-128
   under a fixed key; implemented, auto-detected, unverified against such firmware.
+
+`docs/status.md` lists what is done and what is still open.
 
 protocol knowledge comes from [cedhuf/ha-braun-ble](https://github.com/cedhuf/ha-braun-ble)
 (`docs/bua6350-support.md`), mit licensed.
