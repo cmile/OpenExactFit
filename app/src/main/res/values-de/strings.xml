@@ -4,23 +4,56 @@
     <string name="export_csv">csv exportieren</string>
     <string name="name_users">benutzer benennen</string>
     <string name="auto_sync">beim öffnen abgleichen</string>
+    <string name="background_sync">im hintergrund abgleichen</string>
+    <string name="background_running">hintergrund-abgleich ist an: die app verbindet sich, sobald das messgerät eingeschaltet wird.</string>
     <string name="no_readings">noch keine messungen. messgerät einschalten, abgleichen drücken, messen.</string>
     <string name="no_readings_for_user">noch keine messungen für %1$s.</string>
     <string name="filter_all">alle</string>
+    <string name="view_list">liste</string>
+    <string name="view_chart">diagramm</string>
+    <string name="view_averages">mittelwerte</string>
     <string name="today">heute</string>
     <string name="yesterday">gestern</string>
     <string name="readings_count">%1$d messungen</string>
     <string name="reading_count_one">1 messung</string>
     <string name="user_label">benutzer %1$s</string>
 
+    <string name="range_week">woche</string>
+    <string name="range_month">monat</string>
+    <string name="range_quarter">quartal</string>
+    <string name="range_all">alles</string>
+    <string name="no_readings_in_range">keine messungen in diesem zeitraum.</string>
+    <string name="series_systolic">systolisch</string>
+    <string name="series_diastolic">diastolisch</string>
+    <string name="series_pulse">puls</string>
+    <string name="range_days">%1$d tage</string>
+    <string name="averages_last_days">letzte %1$d tage</string>
+    <string name="averages_all">alle</string>
+    <string name="averages_day">tag</string>
+    <string name="averages_evening">abend</string>
+    <string name="averages_hint">tag: vor %1$d uhr, abend: ab %1$d uhr, nach der uhr des messgeräts. der ring im kalender zeigt den bereich des tagesmittels; ein tipp auf den tag zeigt seine mittelwerte.</string>
+    <string name="averages_pick_user">oben einen benutzer wählen; durchschnitte über beide würden zwei menschen mischen.</string>
+    <string name="chart_hint">gestrichelt: trend über die gezeigten messungen, die veränderung steht neben dem namen. grau: 135/85 und 140/90 mmHg.</string>
+
     <string name="no_bluetooth">dieses gerät hat kein bluetooth low energy.</string>
     <string name="bluetooth_off">bluetooth ist ausgeschaltet. die app braucht es, um das messgerät zu finden.</string>
     <string name="turn_on_bluetooth">einschalten</string>
     <string name="permission_denied">ohne die berechtigung für geräte in der nähe kann die app nicht nach dem messgerät suchen. sie wird nicht für den standort verwendet.</string>
-    <string name="permission_denied_location">ohne die standortberechtigung erlaubt android keine bluetooth-suche. die app liest den standort nicht aus.</string>
     <string name="permission_denied_forever">die berechtigung wurde dauerhaft verweigert. zum abgleichen in den app-einstellungen erteilen.</string>
     <string name="grant_again">erteilen</string>
     <string name="open_settings">app-einstellungen</string>
+
+    <string name="channel_service">hintergrund-abgleich</string>
+    <string name="channel_readings">neue messungen</string>
+    <string name="notification_waiting">wartet auf das messgerät</string>
+    <string name="notification_waiting_since">wartet auf das messgerät, letzter abgleich %1$s</string>
+    <string name="notification_syncing">mit dem messgerät verbunden</string>
+
+    <string name="category_normal">normal</string>
+    <string name="category_elevated">erhöht</string>
+    <string name="category_high">hoch</string>
+    <string name="category_crisis">hypertensive krise</string>
+    <string name="category_scale">bereiche: normal unter 135/85, erhöht ab 135/85, hoch ab 160/100, krise ab 180/110 mmHg. der höhere der beiden werte entscheidet.</string>
 
     <string name="detail_title">%1$s/%2$s mmHg</string>
     <string name="detail_pulse">puls %1$d /min</string>

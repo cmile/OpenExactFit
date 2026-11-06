@@ -14,7 +14,6 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
-import android.os.Build
 import android.os.ParcelUuid
 import de.cmile.openexactfit.ble.Protocol.toHex
 import kotlinx.coroutines.CancellationException
@@ -45,7 +44,8 @@ class ExactFitClient(private val context: Context) {
 
     private val adapter get() = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
 
-    suspend fun scan(timeoutMs: Long = 60_000, address: String? = null): BluetoothDevice? {
+    /** the first monitor seen, or null on timeout. [lowPower] is for the background service's long scans. */
+    suspend fun scan(timeoutMs: Long = 60_000, address: String? = null, lowPower: Boolean = false): BluetoothDevice? {
         val scanner = adapter?.bluetoothLeScanner ?: return null
         return withTimeoutOrNull(timeoutMs) {
             suspendCancellableCoroutine { cont ->
@@ -72,7 +72,9 @@ class ExactFitClient(private val context: Context) {
                     listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid(Protocol.MEASUREMENT_SERVICE)).build(),
                            ScanFilter.Builder().setDeviceName("BUA6350").build())
                 else listOf(ScanFilter.Builder().setDeviceAddress(address.uppercase()).build())
-                val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+                val settings = ScanSettings.Builder()
+                    .setScanMode(if (lowPower) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .build()
                 scanner.startScan(filters, settings, callback)
                 cont.invokeOnCancellation { scanner.stopScan(callback) }
             }
@@ -83,6 +85,11 @@ class ExactFitClient(private val context: Context) {
     suspend fun sync(liveIdleMs: Long = 300_000, onEvent: suspend (Event) -> Unit): Int {
         onEvent(Event.Log("scanning, switch the monitor on now"))
         val device = scan() ?: run { onEvent(Event.Log("no monitor found")); return 0 }
+        return sync(device, liveIdleMs, onEvent)
+    }
+
+    /** the same with the monitor already found, for callers that run their own scan. */
+    suspend fun sync(device: BluetoothDevice, liveIdleMs: Long = 300_000, onEvent: suspend (Event) -> Unit): Int {
         onEvent(Event.Log("found ${device.address}"))
         val gatt = GattSession(context, device)
         var count = 0
@@ -164,11 +171,6 @@ private class GattSession(private val context: Context, private val device: Blue
             else connected.completeExceptionally(IllegalStateException("service discovery failed ($status)"))
         }
 
-        @Deprecated("pre-33 callback")
-        override fun onCharacteristicRead(g: BluetoothGatt, c: BluetoothGattCharacteristic, status: Int) {
-            if (Build.VERSION.SDK_INT < 33) finish(if (status == BluetoothGatt.GATT_SUCCESS) c.value else null)
-        }
-
         override fun onCharacteristicRead(g: BluetoothGatt, c: BluetoothGattCharacteristic, value: ByteArray, status: Int) {
             finish(if (status == BluetoothGatt.GATT_SUCCESS) value else null)
         }
@@ -181,11 +183,6 @@ private class GattSession(private val context: Context, private val device: Blue
             finish(if (status == BluetoothGatt.GATT_SUCCESS) ByteArray(0) else null)
         }
 
-        @Deprecated("pre-33 callback")
-        override fun onCharacteristicChanged(g: BluetoothGatt, c: BluetoothGattCharacteristic) {
-            if (Build.VERSION.SDK_INT < 33) notifications.trySend(c.uuid to (c.value ?: ByteArray(0)))
-        }
-
         override fun onCharacteristicChanged(g: BluetoothGatt, c: BluetoothGattCharacteristic, value: ByteArray) {
             notifications.trySend(c.uuid to value)
         }
@@ -196,9 +193,7 @@ private class GattSession(private val context: Context, private val device: Blue
     }
 
     suspend fun connect(timeoutMs: Long = 20_000) {
-        gatt = if (Build.VERSION.SDK_INT >= 23)
-            device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
-        else device.connectGatt(context, false, callback)
+        gatt = device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
         withTimeout(timeoutMs) { connected.await() }
     }
 
@@ -225,28 +220,16 @@ private class GattSession(private val context: Context, private val device: Blue
 
     suspend fun write(service: UUID, uuid: UUID, value: ByteArray) {
         val c = characteristic(service, uuid)
-        op {
-            if (Build.VERSION.SDK_INT >= 33) {
-                gatt!!.writeCharacteristic(c, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) == BluetoothStatusCodes.SUCCESS
-            } else {
-                @Suppress("DEPRECATION")
-                run { c.value = value; c.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT; gatt!!.writeCharacteristic(c) }
-            }
-        } ?: throw IllegalStateException("write to $uuid failed")
+        op { gatt!!.writeCharacteristic(c, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) == BluetoothStatusCodes.SUCCESS }
+            ?: throw IllegalStateException("write to $uuid failed")
     }
 
     suspend fun enableNotifications(service: UUID, uuid: UUID) {
         val c = characteristic(service, uuid)
         gatt!!.setCharacteristicNotification(c, true)
         val d = c.getDescriptor(Protocol.CCCD) ?: throw IllegalStateException("no cccd on $uuid")
-        op {
-            if (Build.VERSION.SDK_INT >= 33) {
-                gatt!!.writeDescriptor(d, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS
-            } else {
-                @Suppress("DEPRECATION")
-                run { d.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE; gatt!!.writeDescriptor(d) }
-            }
-        } ?: throw IllegalStateException("enabling notifications on $uuid failed")
+        op { gatt!!.writeDescriptor(d, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS }
+            ?: throw IllegalStateException("enabling notifications on $uuid failed")
     }
 
     /** next notification on [uuid]; null on timeout or disconnect. other characteristics' notifications are dropped. */

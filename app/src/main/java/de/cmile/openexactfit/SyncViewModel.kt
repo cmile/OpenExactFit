@@ -20,18 +20,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 data class UiState(
     /** every stored reading, newest first; the screen filters by user. */
     val readings: List<StoredReading> = emptyList(),
     val log: List<String> = emptyList(),
+    /** the screen's own sync is running. */
     val syncing: Boolean = false,
     /** "A", "B" or null for all. */
     val userFilter: String? = null,
     val userNames: Map<String, String> = emptyMap(),
     val autoSync: Boolean = true,
+    /** the menu switch for the foreground service. */
+    val backgroundSync: Boolean = false,
+    /** the service's scan loop is alive right now. */
+    val backgroundRunning: Boolean = false,
 ) {
     val visibleReadings: List<StoredReading>
         get() = if (userFilter == null) readings else readings.filter { it.user == userFilter }
@@ -44,35 +47,32 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     private val store = MeasurementStore(app)
     private val settings = Settings(app)
     private val client = ExactFitClient(app)
-    private val _state = MutableStateFlow(UiState(userNames = settings.userNames(), autoSync = settings.autoSync))
+    private val _state = MutableStateFlow(
+        UiState(userNames = settings.userNames(), autoSync = settings.autoSync, backgroundSync = settings.backgroundSync)
+    )
     val state: StateFlow<UiState> = _state
     private var job: Job? = null
 
-    init { reload() }
-
-    fun reload() {
-        viewModelScope.launch {
-            val rows = withContext(Dispatchers.IO) { store.all() }
-            _state.update { it.copy(readings = rows) }
-        }
+    init {
+        // the store signals every change, the background service's included; the first value loads the list
+        viewModelScope.launch { MeasurementStore.changes.collect { reload() } }
+        viewModelScope.launch { SyncLog.lines.collect { lines -> _state.update { it.copy(log = lines) } } }
+        viewModelScope.launch { SyncService.running.collect { on -> _state.update { it.copy(backgroundRunning = on) } } }
     }
 
+    private suspend fun reload() {
+        val rows = withContext(Dispatchers.IO) { store.all() }
+        _state.update { it.copy(readings = rows) }
+    }
+
+    /** the screen's own sync; not while the background service holds the monitor. */
     fun startSync() {
-        if (job?.isActive == true) return
-        _state.update { it.copy(syncing = true, log = emptyList()) }
+        if (job?.isActive == true || SyncService.running.value) return
+        SyncLog.clear()
+        _state.update { it.copy(syncing = true) }
         job = viewModelScope.launch {
             try {
-                client.sync { event ->
-                    when (event) {
-                        is ExactFitClient.Event.Log -> log(event.text)
-                        is ExactFitClient.Event.Reading -> {
-                            val m = event.measurement
-                            val fresh = withContext(Dispatchers.IO) { store.add(m, event.deviceAddress) }
-                            log("${m.systolic}/${m.diastolic} pulse ${m.pulse ?: "?"} user ${m.user ?: "?"} (${event.source}${if (fresh) "" else ", already stored"})")
-                            if (fresh) reload()
-                        }
-                    }
-                }
+                runSync(client, store)
             } finally {
                 _state.update { it.copy(syncing = false) }
             }
@@ -96,12 +96,28 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(autoSync = on) }
     }
 
-    /** deletes from the app's database only. */
+    /** switches the foreground service on or off; the screen's own sync stops first so only one client talks to the monitor. */
+    fun setBackgroundSync(on: Boolean) {
+        settings.backgroundSync = on
+        _state.update { it.copy(backgroundSync = on) }
+        if (on) {
+            stopSync()
+            SyncService.start(getApplication())
+        } else {
+            SyncService.stop(getApplication())
+        }
+    }
+
+    /** restarts the service when it is wanted but not alive, e.g. after the process was killed. */
+    fun ensureBackgroundSync() {
+        if (settings.backgroundSync && !SyncService.running.value) SyncService.start(getApplication())
+    }
+
+    /** deletes from the app's database only; the store's change signal reloads the list. */
     fun delete(id: Long) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) { store.delete(id) }
-            Log.i(TAG, "deleted reading $id from the app database")
-            reload()
+            Log.i(SyncLog.TAG, "deleted reading $id from the app database")
         }
     }
 
@@ -111,16 +127,5 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         val file = File(dir, "exactfit-readings-${LocalDate.now()}.csv")
         file.writeText(store.csv())
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-    }
-
-    private fun log(text: String) {
-        Log.i(TAG, text)
-        val stamp = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-        _state.update { it.copy(log = (it.log + "$stamp  $text").takeLast(50)) }
-    }
-
-    companion object {
-        /** `adb logcat -s OpenExactFit` follows a sync from the shell */
-        const val TAG = "OpenExactFit"
     }
 }

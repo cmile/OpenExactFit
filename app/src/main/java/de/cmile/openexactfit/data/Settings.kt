@@ -4,7 +4,10 @@ import android.content.Context
 import androidx.core.content.edit
 import de.cmile.openexactfit.ble.Protocol
 
-/** the few things the app remembers besides readings: names for the monitor's users A and B, and whether to scan on start. */
+/**
+ * the few things the app remembers besides readings: names for the monitor's users
+ * A and B, whether to scan on start, and whether the background service is wanted.
+ */
 class Settings(context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
@@ -22,4 +25,9 @@ class Settings(context: Context) {
     var autoSync: Boolean
         get() = prefs.getBoolean("auto_sync", true)
         set(value) = prefs.edit { putBoolean("auto_sync", value) }
+
+    /** the owner switched the foreground service on; it is restarted after a reboot while this is set. */
+    var backgroundSync: Boolean
+        get() = prefs.getBoolean("background_sync", false)
+        set(value) = prefs.edit { putBoolean("background_sync", value) }
 }

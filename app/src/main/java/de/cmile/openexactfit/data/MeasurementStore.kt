@@ -6,6 +6,9 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import de.cmile.openexactfit.ble.Protocol
 import de.cmile.openexactfit.ble.Protocol.toHex
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -81,7 +84,9 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
             put("flags", m.flags.joinToString(","))
             put("raw_hex", m.raw.toHex())
         }
-        return writableDatabase.insertWithOnConflict("measurements", null, values, SQLiteDatabase.CONFLICT_IGNORE) != -1L
+        val fresh = writableDatabase.insertWithOnConflict("measurements", null, values, SQLiteDatabase.CONFLICT_IGNORE) != -1L
+        if (fresh) changed()
+        return fresh
     }
 
     fun all(): List<StoredReading> = readableDatabase.rawQuery(
@@ -102,8 +107,11 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
     }
 
     /** removes one reading from this database only; the monitor is never touched. */
-    fun delete(id: Long): Boolean =
-        writableDatabase.delete("measurements", "id = ?", arrayOf(id.toString())) == 1
+    fun delete(id: Long): Boolean {
+        val gone = writableDatabase.delete("measurements", "id = ?", arrayOf(id.toString())) == 1
+        if (gone) changed()
+        return gone
+    }
 
     fun csv(): String = buildString {
         appendLine("id,device,user,measured_at,received_at,systolic,diastolic,pulse,flags,raw_hex")
@@ -113,7 +121,17 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
         )
     }
 
+    private fun changed() = _changes.update { it + 1 }
+
     companion object {
         val FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+        private val _changes = MutableStateFlow(0)
+
+        /**
+         * bumps whenever any instance in this process adds or deletes a row, so the screen
+         * can reload after the background service stored a reading.
+         */
+        val changes: StateFlow<Int> = _changes
     }
 }

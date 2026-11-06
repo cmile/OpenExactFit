@@ -19,3 +19,8 @@ captures/
 .externalNativeBuild/
 .cxx/
 build.log
+
+# release signing
+keystore.properties
+*.jks
+*.keystore

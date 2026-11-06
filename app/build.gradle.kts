@@ -1,6 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+// release signing comes from keystore.properties in the repository root (git-ignored):
+//   storeFile=~/.android/openexactfit-release.jks   (absolute, ~ allowed, or relative to the root)
+//   storePassword=...
+//   keyAlias=openexactfit
+//   keyPassword=...
+// without the file the release apk is built unsigned.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
 }
 
 android {
@@ -11,12 +24,32 @@ android {
 
     defaultConfig {
         applicationId = "de.cmile.openexactfit"
-        minSdk = 24
+        // android 13: the first version with the non-deprecated gatt callbacks and write calls,
+        // and with java.time, notification runtime permission and nearby-devices permissions built in
+        minSdk = 33
         targetSdk = 37
+        // bump both for every release: the code is what android compares, the name is what people see
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (keystoreProperties.isNotEmpty()) {
+            val path = keystoreProperties.getProperty("storeFile").replaceFirst("~", System.getProperty("user.home"))
+            val store = File(path).let { if (it.isAbsolute) it else rootProject.file(path) }
+            if (store.exists()) {
+                create("release") {
+                    storeFile = store
+                    storePassword = keystoreProperties.getProperty("storePassword")
+                    keyAlias = keystoreProperties.getProperty("keyAlias")
+                    keyPassword = keystoreProperties.getProperty("keyPassword")
+                }
+            } else {
+                logger.warn("keystore.properties points at $store, which does not exist: the release apk will be unsigned")
+            }
+        }
     }
 
     buildTypes {
@@ -25,13 +58,12 @@ android {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-        // java.time below android 8 (api 26)
-        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -39,7 +71,6 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

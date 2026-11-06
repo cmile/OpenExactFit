@@ -13,8 +13,9 @@ google account.
 - stored history: **working**, verified 2026-11-04. `exactfit history` does the
   download the vendor app does, taken from the app's own code (see
   `docs/protocol-notes.md`), and unlike the app deletes nothing on the monitor.
-- android app: **first draft working**, verified 2026-11-05 on android 15. see
-  below.
+- android app: **working**, verified 2026-11-05 and 2026-11-06 on android 15;
+  the chart and the background service from 2026-11-06 are built but not yet
+  tried on the phone. see below.
 - setting the clock: write format known from the app, not implemented yet.
 - encryption: newer firmware than 1.0.14 wraps commands and records in aes-128
   under a fixed key; implemented, auto-detected, unverified against such firmware.
@@ -69,30 +70,83 @@ anyone, although the monitor's own display still shows them.
 ## android app
 
 `app/` is the phone app, kotlin and jetpack compose, package `de.cmile.openexactfit`,
-minimum android 7 (api 24). one screen: a sync button (and a scan on start,
+minimum android 13 (api 33). one screen: a sync button (and a scan on start,
 switchable in the menu), the readings grouped by day with the monitor's
-warnings in words, a user A/B filter, names for the two users, details and
-delete per reading (from the app's database only), and a csv export as a file
-through the share sheet. english and german. it does what `exactfit sync`
-does, over the android gatt api, and keeps its own sqlite file with the same
-columns as the python tool. `app/src/main/java/de/cmile/openexactfit/`:
+warnings in words and a coloured dot for the blood pressure band (the vendor
+app's chart: normal below 135/85, elevated, high, crisis from 180/110), a user
+A/B filter, names for the two users, details and
+delete per reading (from the app's database only), a chart view with a trend
+line per series and the 135/85 and 140/90 guideline lines over a week, month,
+quarter or everything, an averages view with a month calendar and the means
+for the last 7, 14 or 30 days or a tapped day (all, day and evening readings),
+a csv export as a file through the share sheet, and a
+background mode. english and german. it does what `exactfit sync` does, over
+the android gatt api, and keeps its own sqlite file with the same columns as
+the python tool. `app/src/main/java/de/cmile/openexactfit/`:
 
 | file | what |
 | --- | --- |
 | `ble/Protocol.kt` | port of `exactfit/protocol.py`, aes through `javax.crypto` |
 | `ble/ExactFitClient.kt` | scan, connect, stored readings, then live readings; gatt calls serialized over coroutines |
-| `data/MeasurementStore.kt` | sqlite, same schema and deduplication as the python tool |
-| `data/Settings.kt` | user names and the scan-on-start switch |
+| `data/MeasurementStore.kt` | sqlite, same schema and deduplication as the python tool; signals changes to the screen |
+| `data/Settings.kt` | user names, the scan-on-start switch, the background-sync switch |
+| `Sync.kt`, `SyncLog.kt` | one sync run and the session log, shared by the screen and the service |
+| `SyncService.kt`, `BootReceiver.kt` | the foreground service that waits for the monitor, and its restart after a reboot |
 | `SyncViewModel.kt`, `MainActivity.kt` | state, permissions and bluetooth checks, the screen frame |
 | `ui/ReadingsList.kt`, `ui/UserNamesDialog.kt` | the grouped list, the detail dialog, the names dialog |
+| `ui/Trend.kt`, `ui/TrendChart.kt` | ranges, least-squares trend and axis maths (tested); the compose canvas chart |
+| `ui/Category.kt`, `ui/Averages.kt`, `ui/AveragesView.kt` | the blood pressure bands, the means and the calendar view |
+
+**background sync** ("sync in the background" in the menu) starts a
+foreground service with a persistent notification. it runs a filtered,
+low-power bluetooth scan for the monitor, connects and syncs as soon as the
+monitor is switched on, posts a notification for each new reading, and goes
+back to scanning. the monitor advertises only while it is on, so the scan is
+idle almost all the time. the service survives a reboot while the switch is
+on, and stops from the menu or from the notification. while it runs, the
+screen's own sync button is replaced by a note, because the monitor accepts
+one connection at a time.
 
 build with android studio, or `./gradlew :app:assembleDebug` with `JAVA_HOME`
 pointing at a jdk 17 or newer. `./gradlew :app:testDebugUnitTest` runs the
-protocol tests against the same captured bytes as the python tests.
+protocol tests against the same captured bytes as the python tests, plus the
+list and chart maths.
 
-permissions: android 12 and newer ask for "nearby devices" (bluetooth scan and
-connect, declared `neverForLocation`); older versions need fine location, as
-every ble scan does there.
+permissions: "nearby devices" (bluetooth scan and connect, declared
+`neverForLocation`), and for background sync notifications; the
+foreground-service and boot-completed permissions are granted on install. the
+minimum of android 13 is deliberate: it is the first version with the
+non-deprecated gatt api, so the code has one path instead of two, and no
+version of the app ever needs the location permission that ble scanning
+required before android 12.
+
+### release build
+
+the release build is signed with a key that is not in the repository. put a
+`keystore.properties` next to this readme (it is git-ignored):
+
+```properties
+storeFile=~/.android/openexactfit-release.jks
+storePassword=...
+keyAlias=openexactfit
+keyPassword=...
+```
+
+create the keystore once with
+`keytool -genkeypair -keystore ~/.android/openexactfit-release.jks -alias openexactfit -keyalg RSA -keysize 4096 -validity 10000`
+and keep both files safe: android installs an update only when it is signed
+with the same key. then
+
+```bash
+./gradlew :app:assembleRelease     # -> app/build/outputs/apk/release/app-release.apk
+```
+
+bump `versionCode` and `versionName` in `app/build.gradle.kts` for every
+release. without `keystore.properties` the apk is built unsigned. a release
+build cannot be installed over a debug build of the app (different
+signature): uninstalling the debug build deletes its database, so export the
+csv or pull the database (`adb exec-out run-as de.cmile.openexactfit cat
+databases/measurements.sqlite`) first.
 
 ## protocol
 

@@ -1,6 +1,6 @@
 # status and open work
 
-as of 2026-11-05. the protocol details are in `protocol-notes.md`, usage in
+as of 2026-11-06. the protocol details are in `protocol-notes.md`, usage in
 the `README.md`; this file is the to-do list.
 
 ## what works
@@ -20,9 +20,30 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   chips, names for users A and B, tap a reading for details and to delete
   it from the app's database, csv export as a file through a fileprovider, a scan on app start
   (menu toggle), messages for bluetooth off / no permission / permission
-  refused for good, ui strings in resources with a german translation, and
-  core library desugaring so java.time works on android 7. 3 more unit
-  tests.
+  refused for good, ui strings in resources with a german translation. 3
+  more unit tests.
+  minimum android version raised from 7 to 13 (api 33) on 2026-11-06, so
+  the gatt code has one path (the pre-33 callbacks, `characteristic.value`
+  and the desugaring for java.time are gone) and no version ever asks for
+  location.
+  added later on 2026-11-06, **built and unit-tested but not yet tried on
+  the phone**: a chart view (list/chart switch) with systolic, diastolic
+  and pulse over a week, month, quarter or everything, a dashed
+  least-squares trend per series with its change in the legend, the 135/85
+  and 140/90 guideline lines, one chart per user when "all" is selected;
+  a foreground service ("sync in the background" in the menu) that keeps a
+  filtered low-power scan running, syncs whenever the monitor is switched
+  on, posts a notification per new reading and comes back after a reboot;
+  release signing from a git-ignored `keystore.properties`. 6 more unit
+  tests (16 in all). also from 2026-11-06: a new launcher icon (heart with a
+  pulse trace on teal, adaptive plus monochrome), and the vendor app's
+  colour bands as a dot next to each value and in words in the details
+  (`ui/Category.kt`: normal below 135/85, elevated from 135/85, high from
+  160/100, crisis from 180/110, the higher value decides; 2 tests), and
+  an averages view like the vendor app's: 7/14/30-day chips, a month
+  calendar with a ring per day in the band colour of the day's mean, and
+  the means for all, day (before 18:00) and evening readings of the chosen
+  day or span (`ui/Averages.kt`, `ui/AveragesView.kt`, 4 tests).
 - **deduplication** on monitor, user, timestamp and the three values, in
   both stores, with migration of older database files.
 - **documentation** of the protocol, including corrections to the upstream
@@ -39,38 +60,62 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   database keeps one copy either way.
 - nothing here ever writes to the delete, factory-reset or firmware-update
   characteristics, and that stays so.
+- only one client can be connected to the monitor at a time. in the app the
+  background service and the screen's own sync therefore never run together:
+  while the service is on, the sync button is replaced by a note.
 
 ## open work
 
 ### android app
 
+- [ ] try the 2026-11-06 additions on the phone: the chart with real data,
+      the background service through a full cycle (switch on, lock the phone,
+      measure, notification, list updated), the stop action in the
+      notification, a reboot with the service switched on. the installed
+      debug build must be replaced; the release apk has a different
+      signature and cannot be installed over it without losing the database
+      (export the csv or pull the database first).
 - [ ] the permission-denied card is untested (the phone had already granted
-      the permission); revoke it in the app settings and try.
+      the permission); revoke it in the app settings and try. the same for
+      the notification permission on android 13+.
 - [x] a proper reading list: per-day grouping, user A/B filter, the status
       flags spelled out (body movement, irregular pulse, cuff loose).
 - [x] csv export as a file (FileProvider) instead of shared text.
-- [ ] automatic sync: scanning when the app is opened is done (menu toggle
-      "sync when opened", on by default). still open: a foreground service
-      that catches readings while the app is in the background. the monitor
-      advertises only while it is switched on, so background scanning with
-      a service-uuid filter is the realistic route.
+- [x] automatic sync: scanning when the app is opened (menu toggle "sync when
+      opened", on by default) and a foreground service of the
+      connected-device kind that scans in 25-minute rounds (android
+      downgrades longer scans) with the service-uuid and name filters in
+      low-power mode, then syncs and scans again. open: how much battery
+      the filtered scan really costs on the moto g05 over a day; if too
+      much, the pending-intent scan api (android 8+) would let the system
+      wake the app instead.
 - [x] user mapping: name the monitor's users A and B (menu, stored in
       shared preferences, shown in the list, the filter and the details).
 - [x] delete single readings from the app's own database (not from the
       monitor), after a confirmation that says so.
-- [ ] chart with trend: systolic, diastolic and pulse over time, selectable
-      range (week, month, quarter, all), a moving average or regression line
-      per series so the direction is visible at a glance, the 135/85 and
-      140/90 guideline lines for reference, and user A/B separately. also
-      wanted in the python tool as `exactfit plot` (matplotlib, optional
-      dependency) for the same data.
+- [x] chart with trend in the app: `ui/Trend.kt` (ranges, least-squares
+      line, axis bounds, tested) and `ui/TrendChart.kt` (compose canvas, no
+      chart library). two panels so pulse does not share the mmHg axis.
+- [ ] the same chart in the python tool as `exactfit plot` (matplotlib,
+      optional dependency) for the same data.
+- [ ] averages: the vendor app's "evening" boundary is unknown; 18:00 is
+      a guess, change `EVENING_HOUR` if it turns out otherwise. the vendor
+      app may also use a different rule for mixed systolic/diastolic bands.
+- [ ] the colour bands in the chart as faint background bands, if the
+      guideline lines turn out to be too little; and in the python `list`
+      output as a column.
 - [x] handle bluetooth being off and permissions being denied with a message
       instead of a silent "no monitor found" (turn-on request, ask again, or
       a jump to the app settings when refused for good).
-- [ ] replace the deprecated api calls (`connectGatt` without transport,
-      `characteristic.value`) once minSdk allows, or keep the version split
-      and silence the warnings.
-- [ ] release build: signing, versioning, maybe f-droid.
+- [x] replace the deprecated api calls: done by raising minSdk to 33 and
+      deleting the old paths. android 7 to 12 are out; revisit only if
+      someone with such a phone asks, the pre-33 code is in the git history
+      (commit before 2026-11-06 evening).
+- [x] release build: signing from `keystore.properties` (see the readme),
+      `versionCode`/`versionName` in `app/build.gradle.kts`, r8 on.
+- [ ] f-droid: needs a public remote first, then a metadata file; the app
+      has no proprietary dependencies, so it should qualify. a reproducible
+      build would let f-droid ship the apk under this project's own key.
 - [x] a german translation of the ui strings (`values-de`); keep it in step
       when strings change.
 
@@ -107,3 +152,6 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
       scratch material outside the repo; delete it once nothing else is
       needed from it, or keep only the helper scripts.
 - [ ] a remote for the repository; it is local only today.
+- [ ] back up `~/.android/openexactfit-release.jks` and `keystore.properties`
+      somewhere safe; without them no update can be installed over a
+      release build.

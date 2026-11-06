@@ -1,15 +1,19 @@
 package de.cmile.openexactfit.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -128,10 +133,18 @@ private fun ReadingRow(r: StoredReading, userName: String?, onClick: () -> Unit)
             if (userName != null) Text(userName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (flags.isNotEmpty()) Text(flags, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
         }
+        CategoryDot(Category.of(r.systolic, r.diastolic))
+        Spacer(Modifier.width(8.dp))
         Text("${r.systolic}/${r.diastolic}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.width(12.dp))
         Text(r.pulse?.let { "♥ $it" } ?: "", style = MaterialTheme.typography.bodyMedium, softWrap = false, modifier = Modifier.width(64.dp))
     }
+}
+
+/** the band's colour as a small dot; the band's name sits next to it wherever there is room. */
+@Composable
+fun CategoryDot(category: Category) {
+    Box(Modifier.size(10.dp).clip(CircleShape).background(category.color))
 }
 
 @Composable
@@ -143,6 +156,12 @@ private fun ReadingDialog(reading: StoredReading, userName: String, onDelete: ()
         title = { Text(stringResource(R.string.detail_title, r.systolic, r.diastolic)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                val category = Category.of(r.systolic, r.diastolic)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CategoryDot(category)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(category.label))
+                }
                 r.pulse?.let { Text(stringResource(R.string.detail_pulse, it)) }
                 Text(stringResource(R.string.user_label, userName))
                 Text(r.measuredAt?.let { stringResource(R.string.detail_measured, it) } ?: stringResource(R.string.detail_measured_unknown))
@@ -154,6 +173,11 @@ private fun ReadingDialog(reading: StoredReading, userName: String, onDelete: ()
                 )
                 Text(stringResource(R.string.detail_monitor, r.device), style = MaterialTheme.typography.bodySmall)
                 Text(r.rawHex, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                Text(
+                    stringResource(R.string.category_scale),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },

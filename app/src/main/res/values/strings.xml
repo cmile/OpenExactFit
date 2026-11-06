@@ -7,24 +7,62 @@
     <string name="export_csv">export csv</string>
     <string name="name_users">name users</string>
     <string name="auto_sync">sync when opened</string>
+    <string name="background_sync">sync in the background</string>
+    <string name="background_running">background sync is on: the app connects whenever the monitor is switched on.</string>
     <string name="no_readings">no readings yet. switch the monitor on, press sync, measure.</string>
     <string name="no_readings_for_user">no readings for %1$s yet.</string>
     <string name="filter_all">all</string>
+    <string name="view_list">list</string>
+    <string name="view_chart">chart</string>
+    <string name="view_averages">averages</string>
     <string name="today">today</string>
     <string name="yesterday">yesterday</string>
     <string name="readings_count">%1$d readings</string>
     <string name="reading_count_one">1 reading</string>
     <string name="user_label">user %1$s</string>
 
+    <!-- chart -->
+    <string name="range_week">week</string>
+    <string name="range_month">month</string>
+    <string name="range_quarter">quarter</string>
+    <string name="range_all">everything</string>
+    <string name="no_readings_in_range">no readings in this range.</string>
+    <string name="series_systolic">systolic</string>
+    <string name="series_diastolic">diastolic</string>
+    <string name="series_pulse">pulse</string>
+    <!-- averages -->
+    <string name="range_days">%1$d days</string>
+    <string name="averages_last_days">last %1$d days</string>
+    <string name="averages_all">all</string>
+    <string name="averages_day">day</string>
+    <string name="averages_evening">evening</string>
+    <string name="averages_hint">day: before %1$d:00, evening: from %1$d:00, by the monitor\'s clock. the calendar ring shows the band of the day\'s mean; tap a day for its averages.</string>
+    <string name="averages_pick_user">pick a user above; averages across both users would mix two people.</string>
+    <string name="chart_hint">dashed: trend over the readings shown, with its change next to each name. grey: 135/85 and 140/90 mmHg.</string>
+
     <!-- bluetooth and permissions -->
     <string name="no_bluetooth">this device has no bluetooth low energy.</string>
     <string name="bluetooth_off">bluetooth is switched off. the app needs it to find the monitor.</string>
     <string name="turn_on_bluetooth">turn on</string>
     <string name="permission_denied">without the nearby-devices permission the app cannot scan for the monitor. it is not used for location.</string>
-    <string name="permission_denied_location">without the location permission android does not allow bluetooth scanning. the app does not read your location.</string>
     <string name="permission_denied_forever">the permission was refused for good. grant it in the app settings to sync.</string>
     <string name="grant_again">grant</string>
     <string name="open_settings">app settings</string>
+
+    <!-- background service notifications -->
+    <string name="channel_service">background sync</string>
+    <string name="channel_readings">new readings</string>
+    <string name="notification_waiting">waiting for the monitor</string>
+    <string name="notification_waiting_since">waiting for the monitor, last sync %1$s</string>
+    <string name="notification_syncing">connected to the monitor</string>
+    <string name="notification_reading" translatable="false">%1$d/%2$d mmHg</string>
+
+    <!-- blood pressure bands, the vendor app's colour chart -->
+    <string name="category_normal">normal</string>
+    <string name="category_elevated">elevated</string>
+    <string name="category_high">high</string>
+    <string name="category_crisis">hypertensive crisis</string>
+    <string name="category_scale">bands: normal below 135/85, elevated from 135/85, high from 160/100, crisis from 180/110 mmHg. the higher of the two values decides.</string>
 
     <!-- reading details -->
     <string name="detail_title">%1$s/%2$s mmHg</string>
