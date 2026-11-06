@@ -101,6 +101,10 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
         }
     }
 
+    /** removes one reading from this database only; the monitor is never touched. */
+    fun delete(id: Long): Boolean =
+        writableDatabase.delete("measurements", "id = ?", arrayOf(id.toString())) == 1
+
     fun csv(): String = buildString {
         appendLine("id,device,user,measured_at,received_at,systolic,diastolic,pulse,flags,raw_hex")
         for (r in all().asReversed()) appendLine(

@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothStatusCodes
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -226,7 +227,7 @@ private class GattSession(private val context: Context, private val device: Blue
         val c = characteristic(service, uuid)
         op {
             if (Build.VERSION.SDK_INT >= 33) {
-                gatt!!.writeCharacteristic(c, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) == BluetoothGatt.GATT_SUCCESS
+                gatt!!.writeCharacteristic(c, value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) == BluetoothStatusCodes.SUCCESS
             } else {
                 @Suppress("DEPRECATION")
                 run { c.value = value; c.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT; gatt!!.writeCharacteristic(c) }
@@ -240,7 +241,7 @@ private class GattSession(private val context: Context, private val device: Blue
         val d = c.getDescriptor(Protocol.CCCD) ?: throw IllegalStateException("no cccd on $uuid")
         op {
             if (Build.VERSION.SDK_INT >= 33) {
-                gatt!!.writeDescriptor(d, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothGatt.GATT_SUCCESS
+                gatt!!.writeDescriptor(d, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS
             } else {
                 @Suppress("DEPRECATION")
                 run { d.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE; gatt!!.writeDescriptor(d) }

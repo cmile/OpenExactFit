@@ -1,0 +1,52 @@
+<resources>
+    <string name="sync">mit messgerät abgleichen</string>
+    <string name="stop">stopp</string>
+    <string name="export_csv">csv exportieren</string>
+    <string name="name_users">benutzer benennen</string>
+    <string name="auto_sync">beim öffnen abgleichen</string>
+    <string name="no_readings">noch keine messungen. messgerät einschalten, abgleichen drücken, messen.</string>
+    <string name="no_readings_for_user">noch keine messungen für %1$s.</string>
+    <string name="filter_all">alle</string>
+    <string name="today">heute</string>
+    <string name="yesterday">gestern</string>
+    <string name="readings_count">%1$d messungen</string>
+    <string name="reading_count_one">1 messung</string>
+    <string name="user_label">benutzer %1$s</string>
+
+    <string name="no_bluetooth">dieses gerät hat kein bluetooth low energy.</string>
+    <string name="bluetooth_off">bluetooth ist ausgeschaltet. die app braucht es, um das messgerät zu finden.</string>
+    <string name="turn_on_bluetooth">einschalten</string>
+    <string name="permission_denied">ohne die berechtigung für geräte in der nähe kann die app nicht nach dem messgerät suchen. sie wird nicht für den standort verwendet.</string>
+    <string name="permission_denied_location">ohne die standortberechtigung erlaubt android keine bluetooth-suche. die app liest den standort nicht aus.</string>
+    <string name="permission_denied_forever">die berechtigung wurde dauerhaft verweigert. zum abgleichen in den app-einstellungen erteilen.</string>
+    <string name="grant_again">erteilen</string>
+    <string name="open_settings">app-einstellungen</string>
+
+    <string name="detail_title">%1$s/%2$s mmHg</string>
+    <string name="detail_pulse">puls %1$d /min</string>
+    <string name="detail_measured">gemessen %1$s</string>
+    <string name="detail_measured_unknown">messzeit unbekannt (uhr nicht gestellt)</string>
+    <string name="detail_received">empfangen %1$s</string>
+    <string name="detail_monitor">messgerät %1$s</string>
+    <string name="detail_no_flags">keine hinweise vom messgerät</string>
+    <string name="close">schließen</string>
+    <string name="delete">löschen</string>
+    <string name="delete_title">diese messung löschen?</string>
+    <string name="delete_text">sie wird nur aus der datenbank dieser app entfernt. das messgerät behält sie, aber per bluetooth kommt sie nicht wieder, wenn das messgerät sie nicht mehr als ausstehend zählt.</string>
+    <string name="cancel">abbrechen</string>
+
+    <string name="flag_body_movement">bewegung während der messung</string>
+    <string name="flag_cuff_too_loose">manschette zu locker</string>
+    <string name="flag_irregular_pulse">unregelmäßiger puls</string>
+    <string name="flag_pulse_too_high">puls zu hoch</string>
+    <string name="flag_pulse_too_low">puls zu niedrig</string>
+    <string name="flag_improper_position">falsche haltung</string>
+
+    <string name="name_users_title">benutzer des messgeräts benennen</string>
+    <string name="name_users_text">das messgerät speichert messungen für zwei benutzer, A und B, gewählt mit seinem benutzerschalter.</string>
+    <string name="name_user_hint">benutzer %1$s</string>
+    <string name="save">speichern</string>
+
+    <string name="export_chooser">csv exportieren</string>
+    <string name="export_subject">exactfit messungen</string>
+</resources>

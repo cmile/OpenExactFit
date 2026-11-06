@@ -11,11 +11,18 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   `list`, `export`. live readings, stored readings and the combined sync in
   one connection, over bluez without pairing. sqlite store with one row per
   reading, 23 tests.
-- **android app** (`app/`, package `de.cmile.openexactfit`): first draft, one
-  screen. sync button does what `exactfit sync` does, readings list, csv
-  export through the share sheet, session log in the app and in logcat
-  (`adb logcat -s OpenExactFit`). tested on a moto g05 with android 15, both
-  pending readings arrived. 7 protocol tests.
+- **android app** (`app/`, package `de.cmile.openexactfit`): one screen.
+  sync button does what `exactfit sync` does, session log in the app and in
+  logcat (`adb logcat -s OpenExactFit`). tested on a moto g05 with android
+  15 on 2026-11-05, both pending readings arrived. 7 protocol tests.
+  since 2026-11-06, tested on the phone with a live reading: readings
+  grouped by day with the monitor's warnings in words, user A/B filter
+  chips, names for users A and B, tap a reading for details and to delete
+  it from the app's database, csv export as a file through a fileprovider, a scan on app start
+  (menu toggle), messages for bluetooth off / no permission / permission
+  refused for good, ui strings in resources with a german translation, and
+  core library desugaring so java.time works on android 7. 3 more unit
+  tests.
 - **deduplication** on monitor, user, timestamp and the three values, in
   both stores, with migration of older database files.
 - **documentation** of the protocol, including corrections to the upstream
@@ -37,28 +44,35 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
 
 ### android app
 
-- [ ] a proper reading list: per-day grouping, user A/B filter, the status
+- [ ] the permission-denied card is untested (the phone had already granted
+      the permission); revoke it in the app settings and try.
+- [x] a proper reading list: per-day grouping, user A/B filter, the status
       flags spelled out (body movement, irregular pulse, cuff loose).
-- [ ] csv export as a file (FileProvider) instead of shared text.
-- [ ] automatic sync: start scanning when the app is opened, and a foreground
-      service that catches readings while the app is in the background.
-      the monitor advertises only while it is switched on, so background
-      scanning with a service-uuid filter is the realistic route.
-- [ ] user mapping: name the monitor's users A and B.
-- [ ] delete single readings from the app's own database (not from the monitor).
+- [x] csv export as a file (FileProvider) instead of shared text.
+- [ ] automatic sync: scanning when the app is opened is done (menu toggle
+      "sync when opened", on by default). still open: a foreground service
+      that catches readings while the app is in the background. the monitor
+      advertises only while it is switched on, so background scanning with
+      a service-uuid filter is the realistic route.
+- [x] user mapping: name the monitor's users A and B (menu, stored in
+      shared preferences, shown in the list, the filter and the details).
+- [x] delete single readings from the app's own database (not from the
+      monitor), after a confirmation that says so.
 - [ ] chart with trend: systolic, diastolic and pulse over time, selectable
       range (week, month, quarter, all), a moving average or regression line
       per series so the direction is visible at a glance, the 135/85 and
       140/90 guideline lines for reference, and user A/B separately. also
       wanted in the python tool as `exactfit plot` (matplotlib, optional
       dependency) for the same data.
-- [ ] handle bluetooth being off and permissions being denied with a message
-      instead of a silent "no monitor found".
+- [x] handle bluetooth being off and permissions being denied with a message
+      instead of a silent "no monitor found" (turn-on request, ask again, or
+      a jump to the app settings when refused for good).
 - [ ] replace the deprecated api calls (`connectGatt` without transport,
       `characteristic.value`) once minSdk allows, or keep the version split
       and silence the warnings.
 - [ ] release build: signing, versioning, maybe f-droid.
-- [ ] a german translation of the ui strings (they are english today).
+- [x] a german translation of the ui strings (`values-de`); keep it in step
+      when strings change.
 
 ### python tool
 

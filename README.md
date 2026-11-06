@@ -69,17 +69,22 @@ anyone, although the monitor's own display still shows them.
 ## android app
 
 `app/` is the phone app, kotlin and jetpack compose, package `de.cmile.openexactfit`,
-minimum android 7 (api 24). first draft: one screen with a sync button, the
-readings list and a csv export through the share sheet. it does what
-`exactfit sync` does, over the android gatt api, and keeps its own sqlite file
-with the same columns as the python tool. `app/src/main/java/de/cmile/openexactfit/`:
+minimum android 7 (api 24). one screen: a sync button (and a scan on start,
+switchable in the menu), the readings grouped by day with the monitor's
+warnings in words, a user A/B filter, names for the two users, details and
+delete per reading (from the app's database only), and a csv export as a file
+through the share sheet. english and german. it does what `exactfit sync`
+does, over the android gatt api, and keeps its own sqlite file with the same
+columns as the python tool. `app/src/main/java/de/cmile/openexactfit/`:
 
 | file | what |
 | --- | --- |
 | `ble/Protocol.kt` | port of `exactfit/protocol.py`, aes through `javax.crypto` |
 | `ble/ExactFitClient.kt` | scan, connect, stored readings, then live readings; gatt calls serialized over coroutines |
 | `data/MeasurementStore.kt` | sqlite, same schema and deduplication as the python tool |
-| `SyncViewModel.kt`, `MainActivity.kt` | state and the compose screen |
+| `data/Settings.kt` | user names and the scan-on-start switch |
+| `SyncViewModel.kt`, `MainActivity.kt` | state, permissions and bluetooth checks, the screen frame |
+| `ui/ReadingsList.kt`, `ui/UserNamesDialog.kt` | the grouped list, the detail dialog, the names dialog |
 
 build with android studio, or `./gradlew :app:assembleDebug` with `JAVA_HOME`
 pointing at a jdk 17 or newer. `./gradlew :app:testDebugUnitTest` runs the
