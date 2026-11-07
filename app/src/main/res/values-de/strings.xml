@@ -14,8 +14,10 @@
     <string name="view_averages">mittelwerte</string>
     <string name="today">heute</string>
     <string name="yesterday">gestern</string>
-    <string name="readings_count">%1$d messungen</string>
-    <string name="reading_count_one">1 messung</string>
+    <plurals name="readings_count">
+        <item quantity="one">%1$d messung</item>
+        <item quantity="other">%1$d messungen</item>
+    </plurals>
     <string name="user_label">benutzer %1$s</string>
 
     <string name="range_week">woche</string>

@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,7 +50,6 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
-import java.util.Locale
 
 /**
  * the vendor app's "averages" tab: 7/14/30-day chips, a month calendar whose days with
@@ -64,7 +65,7 @@ fun AveragesView(readings: List<StoredReading>, modifier: Modifier = Modifier) {
     var selectedDay by rememberSaveable { mutableStateOf("") }
     var span by rememberSaveable { mutableIntStateOf(7) }
     val marked = remember(readings, month) { daysWithReadings(readings, month) }
-    val locale = Locale.getDefault()
+    val locale = LocalLocale.current.platformLocale
     val firstDayOfWeek = remember(locale) { WeekFields.of(locale).firstDayOfWeek }
 
     Column(modifier.verticalScroll(rememberScrollState())) {
@@ -169,7 +170,7 @@ private fun AverageRow(label: String, a: Average) {
         Column(modifier = Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.bodyMedium)
             Text(
-                if (a.count == 1) stringResource(R.string.reading_count_one) else stringResource(R.string.readings_count, a.count),
+                pluralStringResource(R.plurals.readings_count, a.count, a.count),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

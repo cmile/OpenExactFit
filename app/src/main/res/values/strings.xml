@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">OpenExactFit</string>
 
     <!-- main screen -->
@@ -17,8 +17,10 @@
     <string name="view_averages">averages</string>
     <string name="today">today</string>
     <string name="yesterday">yesterday</string>
-    <string name="readings_count">%1$d readings</string>
-    <string name="reading_count_one">1 reading</string>
+    <plurals name="readings_count">
+        <item quantity="one">%1$d reading</item>
+        <item quantity="other">%1$d readings</item>
+    </plurals>
     <string name="user_label">user %1$s</string>
 
     <!-- chart -->
@@ -31,8 +33,9 @@
     <string name="series_diastolic">diastolic</string>
     <string name="series_pulse">pulse</string>
     <!-- averages -->
-    <string name="range_days">%1$d days</string>
-    <string name="averages_last_days">last %1$d days</string>
+    <!-- the count is always 7, 14 or 30, never one, so no plural forms -->
+    <string name="range_days" tools:ignore="PluralsCandidate">%1$d days</string>
+    <string name="averages_last_days" tools:ignore="PluralsCandidate">last %1$d days</string>
     <string name="averages_all">all</string>
     <string name="averages_day">day</string>
     <string name="averages_evening">evening</string>
@@ -76,7 +79,8 @@
     <string name="delete">delete</string>
     <string name="delete_title">delete this reading?</string>
     <string name="delete_text">it is removed from this app\'s database only. the monitor keeps it, and it will not come back over bluetooth if the monitor no longer counts it as pending.</string>
-    <string name="cancel">cancel</string>
+    <!-- the whole ui is lowercase prose, so the standard "Cancel" is not wanted here -->
+    <string name="cancel" tools:ignore="ButtonCase">cancel</string>
 
     <!-- monitor status flags -->
     <string name="flag_body_movement">body movement</string>

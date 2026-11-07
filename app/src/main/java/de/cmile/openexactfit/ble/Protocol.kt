@@ -1,5 +1,6 @@
 package de.cmile.openexactfit.ble
 
+import android.annotation.SuppressLint
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.crypto.Cipher
@@ -151,6 +152,9 @@ object Protocol {
         return ByteArray(size) { i -> if (i < data.size) data[i] else PAD }
     }
 
+    // ecb with a fixed key is what the monitor's firmware speaks (one 16-byte block per command or
+    // record, see docs/protocol-notes.md); this is interoperability, not a design choice of ours.
+    @SuppressLint("GetInstance")
     private fun cipher(mode: Int): Cipher =
         Cipher.getInstance("AES/ECB/NoPadding").apply { init(mode, SecretKeySpec(AES_BASE_KEY, "AES")) }
 
