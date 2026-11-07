@@ -1,113 +1,121 @@
+<!-- english ui strings in ordinary sentence case, like the german ones in values-de; the
+     lowercase-prose rule of this project covers code, comments, commits and docs, not the ui.
+     keep both files in step when strings change. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">OpenExactFit</string>
 
     <!-- main screen -->
-    <string name="sync">sync with monitor</string>
-    <string name="stop">stop</string>
-    <string name="export_csv">export csv</string>
-    <string name="print">print</string>
-    <string name="name_users">name users</string>
-    <string name="auto_sync">sync when opened</string>
-    <string name="background_sync">sync in the background</string>
-    <string name="show_log">show sync log</string>
-    <string name="background_running">background sync is on: the app connects whenever the monitor is switched on.</string>
-    <string name="no_readings">no readings yet. switch the monitor on, press sync, measure.</string>
-    <string name="no_readings_for_user">no readings for %1$s yet.</string>
-    <string name="filter_all">all</string>
-    <string name="view_list">list</string>
-    <string name="view_chart">chart</string>
-    <string name="view_averages">averages</string>
-    <string name="today">today</string>
-    <string name="yesterday">yesterday</string>
+    <string name="sync">Sync with monitor</string>
+    <string name="stop">Stop</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="print">Print</string>
+    <string name="import_csv">Import CSV</string>
+    <string name="name_users">Name users</string>
+    <string name="auto_sync">Sync when opened</string>
+    <string name="background_sync">Sync in the background</string>
+    <string name="show_log">Show sync log</string>
+    <string name="background_running">Background sync is on: the app connects whenever the monitor is switched on.</string>
+    <string name="no_readings">No readings yet. Switch the monitor on, press Sync, measure.</string>
+    <string name="no_readings_for_user">No readings for %1$s yet.</string>
+    <string name="filter_all">All</string>
+    <string name="view_list">List</string>
+    <string name="view_chart">Chart</string>
+    <string name="view_averages">Averages</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
     <plurals name="readings_count">
         <item quantity="one">%1$d reading</item>
         <item quantity="other">%1$d readings</item>
     </plurals>
-    <string name="user_label">user %1$s</string>
+    <string name="user_label">User %1$s</string>
 
     <!-- chart -->
-    <string name="range_week">week</string>
-    <string name="range_month">month</string>
-    <string name="range_quarter">quarter</string>
-    <string name="range_all">everything</string>
-    <string name="no_readings_in_range">no readings in this range.</string>
-    <string name="series_systolic">systolic</string>
-    <string name="series_diastolic">diastolic</string>
-    <string name="series_pulse">pulse</string>
+    <string name="range_week">Week</string>
+    <string name="range_month">Month</string>
+    <string name="range_quarter">Quarter</string>
+    <string name="range_all">Everything</string>
+    <string name="no_readings_in_range">No readings in this range.</string>
+    <string name="series_systolic">Systolic</string>
+    <string name="series_diastolic">Diastolic</string>
+    <string name="series_pulse">Pulse</string>
     <!-- averages -->
     <!-- the count is always 7, 14 or 30, never one, so no plural forms -->
     <string name="range_days" tools:ignore="PluralsCandidate">%1$d days</string>
-    <string name="averages_last_days" tools:ignore="PluralsCandidate">last %1$d days</string>
-    <string name="averages_all">all</string>
-    <string name="averages_day">day</string>
-    <string name="averages_evening">evening</string>
-    <string name="averages_hint">day: before %1$d:00, evening: from %1$d:00, by the monitor\'s clock. the calendar ring shows the band of the day\'s mean; tap a day for its averages.</string>
-    <string name="averages_pick_user">pick a user above; averages across both users would mix two people.</string>
-    <string name="chart_hint">dashed: trend over the readings shown, with its change next to each name. grey: 135/85 and 140/90 mmHg.</string>
+    <string name="averages_last_days" tools:ignore="PluralsCandidate">Last %1$d days</string>
+    <string name="averages_all">All</string>
+    <string name="averages_day">Day</string>
+    <string name="averages_evening">Evening</string>
+    <string name="averages_hint">Day: before %1$d:00, evening: from %1$d:00, by the monitor\'s clock. The calendar ring shows the band of the day\'s mean; tap a day for its averages.</string>
+    <string name="averages_pick_user">Pick a user above; averages across both users would mix two people.</string>
+    <string name="chart_hint">Dashed: trend over the readings shown, with its change next to each name. Grey: 135/85 and 140/90 mmHg.</string>
 
     <!-- bluetooth and permissions -->
-    <string name="no_bluetooth">this device has no bluetooth low energy.</string>
-    <string name="bluetooth_off">bluetooth is switched off. the app needs it to find the monitor.</string>
-    <string name="turn_on_bluetooth">turn on</string>
-    <string name="permission_denied">without the nearby-devices permission the app cannot scan for the monitor. it is not used for location.</string>
-    <string name="permission_denied_forever">the permission was refused for good. grant it in the app settings to sync.</string>
-    <string name="grant_again">grant</string>
-    <string name="open_settings">app settings</string>
+    <string name="no_bluetooth">This device has no Bluetooth Low Energy.</string>
+    <string name="bluetooth_off">Bluetooth is switched off. The app needs it to find the monitor.</string>
+    <string name="turn_on_bluetooth">Turn on</string>
+    <string name="permission_denied">Without the nearby-devices permission the app cannot scan for the monitor. It is not used for location.</string>
+    <string name="permission_denied_forever">The permission was refused for good. Grant it in the app settings to sync.</string>
+    <string name="grant_again">Grant</string>
+    <string name="open_settings">App settings</string>
 
     <!-- background service notifications -->
-    <string name="channel_service">background sync</string>
-    <string name="channel_readings">new readings</string>
-    <string name="notification_waiting">waiting for the monitor</string>
-    <string name="notification_waiting_since">waiting for the monitor, last sync %1$s</string>
-    <string name="notification_syncing">connected to the monitor</string>
+    <string name="channel_service">Background sync</string>
+    <string name="channel_readings">New readings</string>
+    <string name="notification_waiting">Waiting for the monitor</string>
+    <string name="notification_waiting_since">Waiting for the monitor, last sync %1$s</string>
+    <string name="notification_syncing">Connected to the monitor</string>
     <string name="notification_reading" translatable="false">%1$d/%2$d mmHg</string>
 
     <!-- blood pressure bands, the vendor app's colour chart -->
-    <string name="category_normal">normal</string>
-    <string name="category_elevated">elevated</string>
-    <string name="category_high">high</string>
-    <string name="category_crisis">hypertensive crisis</string>
-    <string name="category_scale">bands: normal below 135/85, elevated from 135/85, high from 160/100, crisis from 180/110 mmHg. the higher of the two values decides.</string>
+    <string name="category_normal">Normal</string>
+    <string name="category_elevated">Elevated</string>
+    <string name="category_high">High</string>
+    <string name="category_crisis">Hypertensive crisis</string>
+    <string name="category_scale">Bands: normal below 135/85, elevated from 135/85, high from 160/100, crisis from 180/110 mmHg. The higher of the two values decides.</string>
 
     <!-- reading details -->
     <string name="detail_title">%1$s/%2$s mmHg</string>
-    <string name="detail_pulse">pulse %1$d /min</string>
-    <string name="detail_measured">measured %1$s</string>
-    <string name="detail_measured_unknown">measured at an unknown time (clock not set)</string>
-    <string name="detail_received">received %1$s</string>
-    <string name="detail_monitor">monitor %1$s</string>
-    <string name="detail_no_flags">no warnings from the monitor</string>
-    <string name="close">close</string>
-    <string name="delete">delete</string>
-    <string name="delete_title">delete this reading?</string>
-    <string name="delete_text">it is removed from this app\'s database only. the monitor keeps it, and it will not come back over bluetooth if the monitor no longer counts it as pending.</string>
-    <!-- the whole ui is lowercase prose, so the standard "Cancel" is not wanted here -->
-    <string name="cancel" tools:ignore="ButtonCase">cancel</string>
+    <string name="detail_pulse">Pulse %1$d /min</string>
+    <string name="detail_measured">Measured %1$s</string>
+    <string name="detail_measured_unknown">Measured at an unknown time (clock not set)</string>
+    <string name="detail_received">Received %1$s</string>
+    <string name="detail_monitor">Monitor %1$s</string>
+    <string name="detail_no_flags">No warnings from the monitor</string>
+    <string name="close">Close</string>
+    <string name="delete">Delete</string>
+    <string name="delete_title">Delete this reading?</string>
+    <string name="delete_text">It is removed from this app\'s database only. The monitor keeps it, and it will not come back over Bluetooth if the monitor no longer counts it as pending.</string>
+    <string name="cancel">Cancel</string>
 
     <!-- monitor status flags -->
-    <string name="flag_body_movement">body movement</string>
-    <string name="flag_cuff_too_loose">cuff too loose</string>
-    <string name="flag_irregular_pulse">irregular pulse</string>
-    <string name="flag_pulse_too_high">pulse too high</string>
-    <string name="flag_pulse_too_low">pulse too low</string>
-    <string name="flag_improper_position">improper position</string>
+    <string name="flag_body_movement">Body movement</string>
+    <string name="flag_cuff_too_loose">Cuff too loose</string>
+    <string name="flag_irregular_pulse">Irregular pulse</string>
+    <string name="flag_pulse_too_high">Pulse too high</string>
+    <string name="flag_pulse_too_low">Pulse too low</string>
+    <string name="flag_improper_position">Improper position</string>
 
     <!-- user names dialog -->
-    <string name="name_users_title">name the monitor\'s users</string>
-    <string name="name_users_text">the monitor stores readings for two users, A and B, chosen with its user switch.</string>
-    <string name="name_user_hint">user %1$s</string>
-    <string name="save">save</string>
+    <string name="name_users_title">Name the monitor\'s users</string>
+    <string name="name_users_text">The monitor stores readings for two users, A and B, chosen with its user switch.</string>
+    <string name="name_user_hint">User %1$s</string>
+    <string name="save">Save</string>
 
     <!-- printed report; systolic, diastolic, pulse, user and the bands reuse the strings above -->
-    <string name="report_title">blood pressure readings</string>
-    <string name="report_printed">printed %1$s</string>
-    <string name="report_time">time</string>
-    <string name="report_band">band</string>
-    <string name="report_notes">notes</string>
-    <string name="report_average">average</string>
-    <string name="report_received">time of receipt, clock not set</string>
+    <string name="report_title">Blood pressure readings</string>
+    <string name="report_printed">Printed %1$s</string>
+    <string name="report_time">Time</string>
+    <string name="report_band">Band</string>
+    <string name="report_notes">Notes</string>
+    <string name="report_average">Average</string>
+    <string name="report_received">Time of receipt, clock not set</string>
+
+    <!-- csv import -->
+    <string name="import_title">CSV import</string>
+    <string name="import_result">%1$d new readings, %2$d already stored, %3$d unreadable lines.</string>
+    <string name="import_failed">The file could not be read.</string>
 
     <!-- export -->
-    <string name="export_chooser">export csv</string>
-    <string name="export_subject">exactfit readings</string>
+    <string name="export_chooser">Export CSV</string>
+    <string name="export_subject">ExactFit readings</string>
 </resources>

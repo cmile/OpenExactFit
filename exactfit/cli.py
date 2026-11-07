@@ -1,4 +1,4 @@
-"""command line: sync with the monitor, list and export readings, explore the gatt table."""
+"""command line: sync with the monitor, list, export and import readings, explore the gatt table."""
 
 from __future__ import annotations
 
@@ -250,6 +250,18 @@ def cmd_export(args) -> int:
     return 0
 
 
+def cmd_import(args) -> int:
+    """read a csv export (from this tool or the android app) into the database."""
+    store = Store(args.db)
+    if args.file == "-":
+        new, dup, bad = store.import_csv(sys.stdin)
+    else:
+        with open(args.file, newline="", encoding="utf-8") as f:
+            new, dup, bad = store.import_csv(f)
+    print(f"{new} new, {dup} already stored, {bad} unreadable")
+    return 0 if bad == 0 else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="exactfit", description=__doc__)
     p.add_argument("--db", type=Path, default=DEFAULT_DB, help=f"sqlite file (default {DEFAULT_DB})")
@@ -286,6 +298,10 @@ def main(argv: list[str] | None = None) -> int:
         s = sub.add_parser(name, help=f"{name} stored measurements" + (" as csv" if name == "export" else ""))
         s.add_argument("--user", choices=protocol.USERS)
         s.set_defaults(func=func, is_async=False)
+
+    s = sub.add_parser("import", help="read a csv export (this tool's or the android app's) into the database")
+    s.add_argument("file", help="csv file, or - for stdin")
+    s.set_defaults(func=cmd_import, is_async=False)
 
     args = p.parse_args(argv)
     logging.basicConfig(

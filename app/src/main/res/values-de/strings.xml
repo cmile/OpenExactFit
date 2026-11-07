@@ -5,6 +5,7 @@
     <string name="stop">Stopp</string>
     <string name="export_csv">CSV exportieren</string>
     <string name="print">Drucken</string>
+    <string name="import_csv">CSV importieren</string>
     <string name="name_users">Benutzer benennen</string>
     <string name="auto_sync">Beim Öffnen abgleichen</string>
     <string name="background_sync">Im Hintergrund abgleichen</string>
@@ -93,6 +94,10 @@
     <string name="report_notes">Hinweise</string>
     <string name="report_average">Mittelwert</string>
     <string name="report_received">Empfangszeit, Uhr nicht gestellt</string>
+
+    <string name="import_title">CSV-Import</string>
+    <string name="import_result">%1$d neue Messungen, %2$d schon vorhanden, %3$d unlesbare Zeilen.</string>
+    <string name="import_failed">Die Datei konnte nicht gelesen werden.</string>
 
     <string name="export_chooser">CSV exportieren</string>
     <string name="export_subject">ExactFit-Messungen</string>

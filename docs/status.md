@@ -49,7 +49,12 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   2026-11-07 a "print" menu item renders the filtered readings as an html
   report (`ui/Report.kt`, one section per user with the mean, a table by
   day with band and notes) and hands it to android's print dialog, whose
-  "save as pdf" doubles as the export for the doctor; 1 test.
+  "save as pdf" doubles as the export for the doctor; 1 test. also since
+  2026-11-07: csv import in both clients (`exactfit import file.csv`, menu
+  item "import csv" in the app). readings are re-parsed from `raw_hex`, so
+  either client's export goes into either database, deduplicated, with
+  device and receipt time from the file; the app's export now quotes fields
+  properly (the flags column holds commas). 2 python tests, 3 kotlin tests.
 - **deduplication** on monitor, user, timestamp and the three values, in
   both stores, with migration of older database files.
 - **documentation** of the protocol, including corrections to the upstream

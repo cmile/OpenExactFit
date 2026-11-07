@@ -131,6 +131,14 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** reads a csv export (ours or the python tool's) from a document uri; null when the file cannot be read. */
+    suspend fun importCsv(context: Context, uri: Uri): MeasurementStore.ImportResult? = withContext(Dispatchers.IO) {
+        val text = runCatching {
+            context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+        }.getOrNull() ?: return@withContext null
+        store.importCsv(text).also { Log.i(SyncLog.TAG, "csv import: ${it.fresh} new, ${it.duplicates} duplicates, ${it.unreadable} unreadable") }
+    }
+
     /** writes the csv to the cache and returns a uri other apps may read once. */
     suspend fun exportCsv(context: Context): Uri = withContext(Dispatchers.IO) {
         val dir = File(context.cacheDir, "export").apply { mkdirs() }

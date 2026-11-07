@@ -6,8 +6,8 @@ braun exactfit 5 connect (bua6350) blood pressure monitor, a python cli
 (`app/`). the local folder is still called `exactfit-ble`. it exists
 because the vendor app forces a google login. owner: smile, who writes
 german; code, comments, commit messages and docs are english, lowercase prose.
-the app's german ui strings (`values-de`) use normal german capitalisation
-(nouns and sentence starts upper case); the english ui strings stay lowercase.
+the app's ui strings are the exception: german (`values-de`) with normal
+german capitalisation, english (`values`) in ordinary sentence case.
 
 ## read first
 

@@ -47,6 +47,7 @@ exactfit history           # stored readings only (deletes nothing on the monito
 exactfit list              # stored measurements
 exactfit list --user A
 exactfit export > bp.csv   # csv on stdout
+exactfit import bp.csv     # read a csv export back in (this tool's or the android app's), deduplicated
 exactfit explore           # dump gatt table and readable characteristics (no writes)
 ```
 
@@ -81,6 +82,7 @@ line per series and the 135/85 and 140/90 guideline lines over a week, month,
 quarter or everything, an averages view with a month calendar and the means
 for the last 7, 14 or 30 days or a tapped day (all, day and evening readings),
 a printable report through android's print dialog (which also saves a pdf),
+a csv import (an export of either client, through the system's file picker),
 a csv export as a file through the share sheet, and a
 background mode. english and german. it does what `exactfit sync` does, over
 the android gatt api, and keeps its own sqlite file with the same columns as

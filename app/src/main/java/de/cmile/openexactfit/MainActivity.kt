@@ -32,6 +32,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -80,6 +81,7 @@ import de.cmile.openexactfit.ui.ReportLabels
 import de.cmile.openexactfit.ui.TrendChart
 import de.cmile.openexactfit.ui.UserNamesDialog
 import de.cmile.openexactfit.ui.theme.OpenExactFitTheme
+import de.cmile.openexactfit.data.MeasurementStore
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -220,6 +222,17 @@ fun App(vm: SyncViewModel = viewModel()) {
 
     val exportSubject = stringResource(R.string.export_subject)
     val exportChooser = stringResource(R.string.export_chooser)
+    // csv import: the system's document picker, then a short result dialog. mail apps hand
+    // csv out under odd mime types, so the picker is not filtered.
+    var importResult by remember { mutableStateOf<MeasurementStore.ImportResult?>(null) }
+    var importFailed by remember { mutableStateOf(false) }
+    val pickCsv = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val result = vm.importCsv(context, uri)
+            if (result == null) importFailed = true else importResult = result
+        }
+    }
+
     val reportTitle = stringResource(R.string.report_title)
     fun print() {
         val html = Report.html(state.visibleReadings, { state.userName(it) }, reportLabels(context))
@@ -247,14 +260,18 @@ fun App(vm: SyncViewModel = viewModel()) {
                     IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, contentDescription = null) }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(
+                            text = { Text(stringResource(R.string.print)) },
+                            enabled = state.visibleReadings.isNotEmpty(),
+                            onClick = { menuOpen = false; print() },
+                        )
+                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.export_csv)) },
                             enabled = state.readings.isNotEmpty(),
                             onClick = { menuOpen = false; export() },
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.print)) },
-                            enabled = state.visibleReadings.isNotEmpty(),
-                            onClick = { menuOpen = false; print() },
+                            text = { Text(stringResource(R.string.import_csv)) },
+                            onClick = { menuOpen = false; pickCsv.launch(arrayOf("*/*")) },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.name_users)) },
@@ -358,6 +375,21 @@ fun App(vm: SyncViewModel = viewModel()) {
         names = state.userNames,
         onSave = { vm.setUserNames(it); namesOpen = false },
         onDismiss = { namesOpen = false },
+    )
+
+    importResult?.let { r ->
+        AlertDialog(
+            onDismissRequest = { importResult = null },
+            title = { Text(stringResource(R.string.import_title)) },
+            text = { Text(stringResource(R.string.import_result, r.fresh, r.duplicates, r.unreadable)) },
+            confirmButton = { TextButton(onClick = { importResult = null }) { Text(stringResource(R.string.close)) } },
+        )
+    }
+    if (importFailed) AlertDialog(
+        onDismissRequest = { importFailed = false },
+        title = { Text(stringResource(R.string.import_title)) },
+        text = { Text(stringResource(R.string.import_failed)) },
+        confirmButton = { TextButton(onClick = { importFailed = false }) { Text(stringResource(R.string.close)) } },
     )
 }
 

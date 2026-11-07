@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
-from .protocol import Measurement
+from .protocol import Measurement, ProtocolError, parse_measurement
 
 SCHEMA = """
 create table if not exists measurements (
@@ -69,8 +69,11 @@ class Store:
                 "commit;"
             )
 
-    def add(self, m: Measurement, device: str) -> bool:
-        """store a measurement; returns False if this reading was already stored."""
+    def add(self, m: Measurement, device: str, received_at: str | None = None) -> bool:
+        """store a measurement; returns False if this reading was already stored.
+
+        ``received_at`` defaults to now; an import passes the original time along.
+        """
         try:
             with self.conn:
                 self.conn.execute(
@@ -81,7 +84,7 @@ class Store:
                         device,
                         m.user,
                         m.timestamp.isoformat(sep=" ") if m.timestamp else None,
-                        datetime.now().isoformat(sep=" ", timespec="seconds"),
+                        received_at or datetime.now().isoformat(sep=" ", timespec="seconds"),
                         m.systolic,
                         m.diastolic,
                         m.map_field,
@@ -108,3 +111,24 @@ class Store:
         writer.writerow(COLUMNS)
         for row in rows:
             writer.writerow([row[c] for c in COLUMNS])
+
+    def import_csv(self, lines: Iterable[str]) -> tuple[int, int, int]:
+        """read an export of either client back in.
+
+        every reading is re-parsed from its ``raw_hex``, so the android export
+        (which lacks ``map_field``) and this tool's own both work, and the usual
+        deduplication applies. ``received_at`` and ``device`` are taken from the
+        file. returns (new, already stored, unreadable rows).
+        """
+        new = dup = bad = 0
+        for row in csv.DictReader(lines):
+            try:
+                m = parse_measurement(bytes.fromhex(row["raw_hex"]))
+            except (KeyError, TypeError, ValueError, ProtocolError):
+                bad += 1
+                continue
+            if self.add(m, row.get("device") or "?", row.get("received_at") or None):
+                new += 1
+            else:
+                dup += 1
+        return new, dup, bad

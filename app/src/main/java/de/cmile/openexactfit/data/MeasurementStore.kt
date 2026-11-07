@@ -70,13 +70,16 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
         }
     }
 
-    /** stores a reading; false if this reading from this monitor is already there. */
-    fun add(m: Protocol.Measurement, device: String): Boolean {
+    /**
+     * stores a reading; false if this reading from this monitor is already there.
+     * [receivedAt] defaults to now; an import passes the original time along.
+     */
+    fun add(m: Protocol.Measurement, device: String, receivedAt: String? = null): Boolean {
         val values = ContentValues().apply {
             put("device", device)
             put("user", m.user)
             put("measured_at", m.timestamp?.format(FORMAT))
-            put("received_at", LocalDateTime.now().format(FORMAT))
+            put("received_at", receivedAt ?: LocalDateTime.now().format(FORMAT))
             put("systolic", m.systolic)
             put("diastolic", m.diastolic)
             put("map_field", m.mapField)
@@ -117,8 +120,32 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
         appendLine("id,device,user,measured_at,received_at,systolic,diastolic,pulse,flags,raw_hex")
         for (r in all().asReversed()) appendLine(
             listOf(r.id, r.device, r.user ?: "", r.measuredAt ?: "", r.receivedAt, r.systolic, r.diastolic,
-                r.pulse ?: "", r.flags, r.rawHex).joinToString(",")
+                r.pulse ?: "", r.flags, r.rawHex).joinToString(",") { csvField(it.toString()) }
         )
+    }
+
+    data class ImportResult(val fresh: Int, val duplicates: Int, val unreadable: Int)
+
+    /**
+     * reads an export of either client back in. every reading is re-parsed from its
+     * `raw_hex`, so the python export (which has a `map_field` column) and our own both
+     * work, and the usual deduplication applies. device and receipt time come from the file.
+     */
+    fun importCsv(text: String): ImportResult {
+        var fresh = 0
+        var duplicates = 0
+        var unreadable = 0
+        for (r in csvRecords(text)) {
+            val m = try {
+                Protocol.parseMeasurement(Protocol.hex(r["raw_hex"].orEmpty()))
+            } catch (e: Exception) {
+                unreadable++
+                continue
+            }
+            val device = r["device"].orEmpty().ifBlank { "?" }
+            if (add(m, device, r["received_at"]?.takeIf { it.isNotBlank() })) fresh++ else duplicates++
+        }
+        return ImportResult(fresh, duplicates, unreadable)
     }
 
     private fun changed() = _changes.update { it + 1 }
