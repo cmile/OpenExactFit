@@ -222,6 +222,11 @@ fun App(vm: SyncViewModel = viewModel()) {
                                 if (state.backgroundSync) vm.setBackgroundSync(false) else enableBackgroundSync()
                             },
                         )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.show_log)) },
+                            trailingIcon = { Checkbox(checked = state.showLog, onCheckedChange = null) },
+                            onClick = { vm.setShowLog(!state.showLog) },
+                        )
                     }
                 },
             )
@@ -248,7 +253,7 @@ fun App(vm: SyncViewModel = viewModel()) {
                     },
                 )
             }
-            if (state.log.isNotEmpty()) {
+            if (state.showLog && state.log.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {

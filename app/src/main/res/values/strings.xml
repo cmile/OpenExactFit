@@ -8,6 +8,7 @@
     <string name="name_users">name users</string>
     <string name="auto_sync">sync when opened</string>
     <string name="background_sync">sync in the background</string>
+    <string name="show_log">show sync log</string>
     <string name="background_running">background sync is on: the app connects whenever the monitor is switched on.</string>
     <string name="no_readings">no readings yet. switch the monitor on, press sync, measure.</string>
     <string name="no_readings_for_user">no readings for %1$s yet.</string>

@@ -35,6 +35,8 @@ data class UiState(
     val backgroundSync: Boolean = false,
     /** the service's scan loop is alive right now. */
     val backgroundRunning: Boolean = false,
+    /** the menu switch for the session log card. */
+    val showLog: Boolean = false,
 ) {
     val visibleReadings: List<StoredReading>
         get() = if (userFilter == null) readings else readings.filter { it.user == userFilter }
@@ -48,7 +50,10 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     private val settings = Settings(app)
     private val client = ExactFitClient(app)
     private val _state = MutableStateFlow(
-        UiState(userNames = settings.userNames(), autoSync = settings.autoSync, backgroundSync = settings.backgroundSync)
+        UiState(
+            userNames = settings.userNames(), autoSync = settings.autoSync,
+            backgroundSync = settings.backgroundSync, showLog = settings.showLog,
+        )
     )
     val state: StateFlow<UiState> = _state
     private var job: Job? = null
@@ -94,6 +99,11 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     fun setAutoSync(on: Boolean) {
         settings.autoSync = on
         _state.update { it.copy(autoSync = on) }
+    }
+
+    fun setShowLog(on: Boolean) {
+        settings.showLog = on
+        _state.update { it.copy(showLog = on) }
     }
 
     /** switches the foreground service on or off; the screen's own sync stops first so only one client talks to the monitor. */

@@ -43,7 +43,9 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   an averages view like the vendor app's: 7/14/30-day chips, a month
   calendar with a ring per day in the band colour of the day's mean, and
   the means for all, day (before 18:00) and evening readings of the chosen
-  day or span (`ui/Averages.kt`, `ui/AveragesView.kt`, 4 tests).
+  day or span (`ui/Averages.kt`, `ui/AveragesView.kt`, 4 tests). the
+  session log card is hidden by default since 2026-11-06 evening (menu
+  switch "show sync log"); logcat has the log either way.
 - **deduplication** on monitor, user, timestamp and the three values, in
   both stores, with migration of older database files.
 - **documentation** of the protocol, including corrections to the upstream

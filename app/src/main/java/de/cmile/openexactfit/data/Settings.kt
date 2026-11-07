@@ -30,4 +30,9 @@ class Settings(context: Context) {
     var backgroundSync: Boolean
         get() = prefs.getBoolean("background_sync", false)
         set(value) = prefs.edit { putBoolean("background_sync", value) }
+
+    /** the session log card on the main screen; off by default, logcat has it either way. */
+    var showLog: Boolean
+        get() = prefs.getBoolean("show_log", false)
+        set(value) = prefs.edit { putBoolean("show_log", value) }
 }

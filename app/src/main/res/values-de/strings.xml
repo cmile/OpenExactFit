@@ -5,6 +5,7 @@
     <string name="name_users">benutzer benennen</string>
     <string name="auto_sync">beim öffnen abgleichen</string>
     <string name="background_sync">im hintergrund abgleichen</string>
+    <string name="show_log">sync-protokoll anzeigen</string>
     <string name="background_running">hintergrund-abgleich ist an: die app verbindet sich, sobald das messgerät eingeschaltet wird.</string>
     <string name="no_readings">noch keine messungen. messgerät einschalten, abgleichen drücken, messen.</string>
     <string name="no_readings_for_user">noch keine messungen für %1$s.</string>
