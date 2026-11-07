@@ -4,6 +4,8 @@ open-source client for the braun exactfit 5 connect (bua6350) blood pressure
 monitor: a python cli (`exactfit/`) and an android app (`app/`). it exists
 because the vendor app forces a google login. owner: smile, who writes
 german; code, comments, commit messages and docs are english, lowercase prose.
+the app's german ui strings (`values-de`) use normal german capitalisation
+(nouns and sentence starts upper case); the english ui strings stay lowercase.
 
 ## read first
 
