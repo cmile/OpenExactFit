@@ -79,6 +79,7 @@ delete per reading (from the app's database only), a chart view with a trend
 line per series and the 135/85 and 140/90 guideline lines over a week, month,
 quarter or everything, an averages view with a month calendar and the means
 for the last 7, 14 or 30 days or a tapped day (all, day and evening readings),
+a printable report through android's print dialog (which also saves a pdf),
 a csv export as a file through the share sheet, and a
 background mode. english and german. it does what `exactfit sync` does, over
 the android gatt api, and keeps its own sqlite file with the same columns as
@@ -96,6 +97,7 @@ the python tool. `app/src/main/java/de/cmile/openexactfit/`:
 | `ui/ReadingsList.kt`, `ui/UserNamesDialog.kt` | the grouped list, the detail dialog, the names dialog |
 | `ui/Trend.kt`, `ui/TrendChart.kt` | ranges, least-squares trend and axis maths (tested); the compose canvas chart |
 | `ui/Category.kt`, `ui/Averages.kt`, `ui/AveragesView.kt` | the blood pressure bands, the means and the calendar view |
+| `ui/Report.kt` | the html report for printing, one section per user |
 
 **background sync** ("sync in the background" in the menu) starts a
 foreground service with a persistent notification. it runs a filtered,

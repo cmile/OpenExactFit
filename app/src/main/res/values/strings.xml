@@ -5,6 +5,7 @@
     <string name="sync">sync with monitor</string>
     <string name="stop">stop</string>
     <string name="export_csv">export csv</string>
+    <string name="print">print</string>
     <string name="name_users">name users</string>
     <string name="auto_sync">sync when opened</string>
     <string name="background_sync">sync in the background</string>
@@ -96,6 +97,15 @@
     <string name="name_users_text">the monitor stores readings for two users, A and B, chosen with its user switch.</string>
     <string name="name_user_hint">user %1$s</string>
     <string name="save">save</string>
+
+    <!-- printed report; systolic, diastolic, pulse, user and the bands reuse the strings above -->
+    <string name="report_title">blood pressure readings</string>
+    <string name="report_printed">printed %1$s</string>
+    <string name="report_time">time</string>
+    <string name="report_band">band</string>
+    <string name="report_notes">notes</string>
+    <string name="report_average">average</string>
+    <string name="report_received">time of receipt, clock not set</string>
 
     <!-- export -->
     <string name="export_chooser">export csv</string>

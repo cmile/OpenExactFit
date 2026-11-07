@@ -4,6 +4,7 @@
     <string name="sync">Mit Messgerät abgleichen</string>
     <string name="stop">Stopp</string>
     <string name="export_csv">CSV exportieren</string>
+    <string name="print">Drucken</string>
     <string name="name_users">Benutzer benennen</string>
     <string name="auto_sync">Beim Öffnen abgleichen</string>
     <string name="background_sync">Im Hintergrund abgleichen</string>
@@ -84,6 +85,14 @@
     <string name="name_users_text">Das Messgerät speichert Messungen für zwei Benutzer, A und B, gewählt mit seinem Benutzerschalter.</string>
     <string name="name_user_hint">Benutzer %1$s</string>
     <string name="save">Speichern</string>
+
+    <string name="report_title">Blutdruckmessungen</string>
+    <string name="report_printed">Gedruckt am %1$s</string>
+    <string name="report_time">Uhrzeit</string>
+    <string name="report_band">Bereich</string>
+    <string name="report_notes">Hinweise</string>
+    <string name="report_average">Mittelwert</string>
+    <string name="report_received">Empfangszeit, Uhr nicht gestellt</string>
 
     <string name="export_chooser">CSV exportieren</string>
     <string name="export_subject">ExactFit-Messungen</string>

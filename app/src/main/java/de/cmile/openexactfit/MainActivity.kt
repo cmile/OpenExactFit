@@ -9,7 +9,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.print.PrintAttributes
+import android.print.PrintManager
 import android.provider.Settings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -69,7 +73,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.cmile.openexactfit.ui.AveragesView
 import de.cmile.openexactfit.ui.ChartRange
+import de.cmile.openexactfit.ui.FLAG_LABELS
 import de.cmile.openexactfit.ui.ReadingsList
+import de.cmile.openexactfit.ui.Report
+import de.cmile.openexactfit.ui.ReportLabels
 import de.cmile.openexactfit.ui.TrendChart
 import de.cmile.openexactfit.ui.UserNamesDialog
 import de.cmile.openexactfit.ui.theme.OpenExactFitTheme
@@ -95,6 +102,40 @@ fun missingPermissions(context: Context): List<String> =
 
 private fun bluetoothAdapter(context: Context): BluetoothAdapter? =
     (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+
+/** the report's words from resources; plain context calls, because the report is built outside composition. */
+fun reportLabels(context: Context) = ReportLabels(
+    title = context.getString(R.string.report_title),
+    printed = context.getString(R.string.report_printed),
+    user = context.getString(R.string.user_label),
+    time = context.getString(R.string.report_time),
+    systolic = context.getString(R.string.series_systolic),
+    diastolic = context.getString(R.string.series_diastolic),
+    pulse = context.getString(R.string.series_pulse),
+    band = context.getString(R.string.report_band),
+    notes = context.getString(R.string.report_notes),
+    average = context.getString(R.string.report_average),
+    received = context.getString(R.string.report_received),
+    readings = { n -> context.resources.getQuantityString(R.plurals.readings_count, n, n) },
+    category = { c -> context.getString(c.label) },
+    flag = { f -> FLAG_LABELS[f]?.let(context::getString) ?: f.replace('_', ' ') },
+)
+
+/** kept alive while the print framework renders from it; it does so asynchronously after the dialog opens. */
+private var printWebView: WebView? = null
+
+/** hands an html page to android's print dialog, which also offers "save as pdf". needs an activity context. */
+fun printHtml(context: Context, html: String, jobName: String) {
+    val webView = WebView(context)
+    printWebView = webView
+    webView.webViewClient = object : WebViewClient() {
+        override fun onPageFinished(view: WebView, url: String?) {
+            val manager = context.getSystemService(Context.PRINT_SERVICE) as PrintManager
+            manager.print(jobName, view.createPrintDocumentAdapter(jobName), PrintAttributes.Builder().build())
+        }
+    }
+    webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+}
 
 /** why a sync cannot start right now; shown instead of a silent "no monitor found". */
 sealed class Problem {
@@ -179,6 +220,11 @@ fun App(vm: SyncViewModel = viewModel()) {
 
     val exportSubject = stringResource(R.string.export_subject)
     val exportChooser = stringResource(R.string.export_chooser)
+    val reportTitle = stringResource(R.string.report_title)
+    fun print() {
+        val html = Report.html(state.visibleReadings, { state.userName(it) }, reportLabels(context))
+        printHtml(context, html, reportTitle)
+    }
     fun export() {
         scope.launch {
             val uri = vm.exportCsv(context)
@@ -204,6 +250,11 @@ fun App(vm: SyncViewModel = viewModel()) {
                             text = { Text(stringResource(R.string.export_csv)) },
                             enabled = state.readings.isNotEmpty(),
                             onClick = { menuOpen = false; export() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.print)) },
+                            enabled = state.visibleReadings.isNotEmpty(),
+                            onClick = { menuOpen = false; print() },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.name_users)) },

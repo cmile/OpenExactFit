@@ -45,7 +45,11 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   the means for all, day (before 18:00) and evening readings of the chosen
   day or span (`ui/Averages.kt`, `ui/AveragesView.kt`, 4 tests). the
   session log card is hidden by default since 2026-11-06 evening (menu
-  switch "show sync log"); logcat has the log either way.
+  switch "show sync log"); logcat has the log either way. since
+  2026-11-07 a "print" menu item renders the filtered readings as an html
+  report (`ui/Report.kt`, one section per user with the mean, a table by
+  day with band and notes) and hands it to android's print dialog, whose
+  "save as pdf" doubles as the export for the doctor; 1 test.
 - **deduplication** on monitor, user, timestamp and the three values, in
   both stores, with migration of older database files.
 - **documentation** of the protocol, including corrections to the upstream
@@ -103,6 +107,9 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
 - [ ] averages: the vendor app's "evening" boundary is unknown; 18:00 is
       a guess, change `EVENING_HOUR` if it turns out otherwise. the vendor
       app may also use a different rule for mixed systolic/diastolic bands.
+- [ ] print: the report prints everything the current filter shows; a
+      range picker (last 30 days, a month) in front of the print dialog
+      would help once the database is long.
 - [ ] the colour bands in the chart as faint background bands, if the
       guideline lines turn out to be too little; and in the python `list`
       output as a column.
