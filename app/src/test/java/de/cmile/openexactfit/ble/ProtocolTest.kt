@@ -8,7 +8,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDateTime
 
-/** the same captured bytes as tests/test_protocol.py. */
+/**
+ * the same bytes as tests/test_protocol.py: the upstream capture verbatim, the own-device
+ * records in our monitor's exact layout with pressure, pulse and time bytes changed.
+ */
 class ProtocolTest {
     @Test fun liveRecordFromOwnDevice() {
         val m = Protocol.parseMeasurement(Protocol.hex("1e800050005a00ea07010e071e004800000000"))

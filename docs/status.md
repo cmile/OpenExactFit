@@ -160,7 +160,8 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
 - [ ] `~/Projects/healthyheart-apk` (the decompiled vendor app, ~350 mb) is
       scratch material outside the repo; delete it once nothing else is
       needed from it, or keep only the helper scripts.
-- [ ] a remote for the repository; it is local only today.
+- [x] a remote: https://github.com/cmile/OpenExactFit, branch `main`, first
+      push on 2026-11-07. `gh auth setup-git` provides the credentials.
 - [ ] back up `~/.android/openexactfit-release.jks` and `keystore.properties`
       somewhere safe; without them no update can be installed over a
       release build.

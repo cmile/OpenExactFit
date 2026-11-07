@@ -28,6 +28,8 @@ def test_capture_user_b_clean():
     assert "133/70 mmHg" in str(m)
 
 
+# records in the exact layout our own monitor (firmware 1.0.14) sends, with the pressure,
+# pulse and time bytes changed so that nobody's real readings sit in a public repository
 OWN_1 = bytes.fromhex("1e7a004e005a00ea07010e0717004600000000")
 OWN_2 = bytes.fromhex("1e800050005a00ea07010e071e004800000000")
 
@@ -200,7 +202,7 @@ def test_set_time_layout():
 
 
 def test_month_high_bit_means_clock_unset():
-    raw = bytearray(bytes.fromhex("1e800050005a00ea07010e071e004800000000"))
+    raw = bytearray(OWN_2)
     raw[9] |= 0x80
     m = protocol.parse_measurement(bytes(raw))
     assert m.clock_was_unset and m.timestamp.month == 1

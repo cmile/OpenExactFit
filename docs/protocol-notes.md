@@ -28,6 +28,11 @@ on the display:
 1e 8000 5000 5a00 ea07 01 0e 07 1e 00 4800 00 0000   128/80, pulse 72, 07:30, user a
 ```
 
+(privacy note: in every own-device record in this repository the pressure,
+pulse and time fields are altered, so the numbers above are not anybody's
+readings. the layout, the flags, the constant bytes and everything the notes
+conclude from them are the real capture.)
+
 the 0x2a35 layout holds as upstream describes it, with two corrections:
 
 - **bytes 5..6 are not the mean arterial pressure.** all four live records
