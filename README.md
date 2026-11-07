@@ -1,8 +1,9 @@
-# exactfit-ble
+# OpenExactFit
 
 read blood pressure measurements from a **braun exactfit 5 connect (bua6350)**
 over bluetooth low energy, locally, without the healthy heart app and without a
-google account.
+google account. a python command-line tool (`exactfit`) and an android app,
+both open source, mit licensed: https://github.com/cmile/OpenExactFit
 
 ## status
 

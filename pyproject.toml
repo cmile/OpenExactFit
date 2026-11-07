@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "exactfit-ble"
+name = "openexactfit"
 version = "0.1.0"
 description = "read blood pressure measurements from a braun exactfit 5 connect (bua6350) over bluetooth low energy, without the vendor app"
 readme = "README.md"
