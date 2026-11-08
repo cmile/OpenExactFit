@@ -9,7 +9,7 @@ description = "read blood pressure measurements from a braun exactfit 5 connect 
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
-dependencies = ["bleak>=0.22"]
+dependencies = ["bleak>=0.22", "cryptography>=42"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]

@@ -57,6 +57,11 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   properly (the flags column holds commas). 2 python tests, 3 kotlin tests.
 - **deduplication** on monitor, user, timestamp and the three values, in
   both stores, with migration of older database files.
+- **aes** through standard libraries on both sides since 2026-11-08: the
+  python tool uses the `cryptography` package (its only dependency besides
+  bleak), the app `javax.crypto`. the hand-written aes-128 that the python
+  tool started with is gone; ecb with the fixed key stays because the
+  firmware speaks it.
 - **documentation** of the protocol, including corrections to the upstream
   ha-braun-ble notes and what was learned from the vendor app's code.
 
