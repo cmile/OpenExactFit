@@ -22,6 +22,21 @@ class AveragesTest {
         assertNull(average(emptyList()))
     }
 
+    @Test fun bySessionASittingCountsOnceHoweverManyReadingsItHas() {
+        // newest first: an evening sitting of three high readings, a single morning reading
+        val rows = listOf(
+            reading("2026-11-06 21:06:00", 140, 90, 80), reading("2026-11-06 21:03:00", 140, 90, 80),
+            reading("2026-11-06 21:00:00", 140, 90, 80), reading("2026-11-06 08:00:00", 120, 80, 60),
+        )
+        val perReading = average(rows, bySession = false)!!
+        assertEquals(Triple(135, 88, 75), Triple(perReading.systolic, perReading.diastolic, perReading.pulse))
+        assertNull(perReading.sessions)
+        val perSession = average(rows, bySession = true)!!
+        assertEquals(Triple(130, 85, 70), Triple(perSession.systolic, perSession.diastolic, perSession.pulse))
+        assertEquals(2, perSession.sessions)
+        assertEquals(4, perSession.count)
+    }
+
     @Test fun eveningStartsAtEighteen() {
         assertEquals(false, reading("2026-11-06 17:59:00").isEvening())
         assertEquals(true, reading("2026-11-06 18:00:00").isEvening())

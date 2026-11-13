@@ -35,4 +35,14 @@ class Settings(context: Context) {
     var showLog: Boolean
         get() = prefs.getBoolean("show_log", false)
         set(value) = prefs.edit { putBoolean("show_log", value) }
+
+    /** show readings taken within minutes of each other as one line with their mean; display only. */
+    var groupSessions: Boolean
+        get() = prefs.getBoolean("group_sessions", true)
+        set(value) = prefs.edit { putBoolean("group_sessions", value) }
+
+    /** averages count each session once (mean of the session means) instead of each reading once. */
+    var averageSessions: Boolean
+        get() = prefs.getBoolean("average_sessions", true)
+        set(value) = prefs.edit { putBoolean("average_sessions", value) }
 }

@@ -80,6 +80,7 @@ import de.cmile.openexactfit.ui.Report
 import de.cmile.openexactfit.ui.ReportLabels
 import de.cmile.openexactfit.ui.TrendChart
 import de.cmile.openexactfit.ui.UserNamesDialog
+import de.cmile.openexactfit.ui.groupSessions
 import de.cmile.openexactfit.ui.theme.OpenExactFitTheme
 import de.cmile.openexactfit.data.MeasurementStore
 import kotlinx.coroutines.launch
@@ -235,7 +236,8 @@ fun App(vm: SyncViewModel = viewModel()) {
 
     val reportTitle = stringResource(R.string.report_title)
     fun print() {
-        val html = Report.html(state.visibleReadings, { state.userName(it) }, reportLabels(context))
+        val html = Report.html(state.visibleReadings, { state.userName(it) }, reportLabels(context),
+            sessions = state.groupSessions, sessionMeans = state.averageSessions)
         printHtml(context, html, reportTitle)
     }
     fun export() {
@@ -294,6 +296,16 @@ fun App(vm: SyncViewModel = viewModel()) {
                             text = { Text(stringResource(R.string.show_log)) },
                             trailingIcon = { Checkbox(checked = state.showLog, onCheckedChange = null) },
                             onClick = { vm.setShowLog(!state.showLog) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.group_sessions)) },
+                            trailingIcon = { Checkbox(checked = state.groupSessions, onCheckedChange = null) },
+                            onClick = { vm.setGroupSessions(!state.groupSessions) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.average_sessions)) },
+                            trailingIcon = { Checkbox(checked = state.averageSessions, onCheckedChange = null) },
+                            onClick = { vm.setAverageSessions(!state.averageSessions) },
                         )
                     }
                 },
@@ -364,6 +376,7 @@ fun App(vm: SyncViewModel = viewModel()) {
                 else -> ReadingsList(
                     readings = state.visibleReadings,
                     showUser = state.userFilter == null,
+                    sessions = state.groupSessions,
                     userName = { state.userName(it) },
                     onDelete = { vm.delete(it) },
                     onNote = { id, note -> vm.setNote(id, note) },
@@ -406,7 +419,11 @@ private fun ChartView(state: UiState, range: ChartRange, onRange: (ChartRange) -
         for ((user, rows) in groups) {
             Spacer(Modifier.height(8.dp))
             if (groups.size > 1) Text(state.userName(user), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-            TrendChart(readings = rows, range = range)
+            // with sessions on, the chart draws one point per sitting (its mean) instead of every reading
+            val points = remember(rows, state.groupSessions) {
+                if (state.groupSessions) groupSessions(rows).map { it.asReading() } else rows
+            }
+            TrendChart(readings = points, range = range)
         }
         Spacer(Modifier.height(16.dp))
     }
@@ -419,7 +436,7 @@ private fun AveragesPane(state: UiState) {
     if (state.userFilter == null && users.size > 1) {
         Text(stringResource(R.string.averages_pick_user), style = MaterialTheme.typography.bodyMedium)
     } else {
-        AveragesView(readings = state.visibleReadings, modifier = Modifier.fillMaxWidth())
+        AveragesView(readings = state.visibleReadings, modifier = Modifier.fillMaxWidth(), bySession = state.averageSessions)
     }
 }
 

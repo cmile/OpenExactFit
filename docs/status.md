@@ -65,6 +65,18 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   import never overwrites a note that is already there. the app's
   migration ran on the phone's real database on 2026-11-13 (63 readings
   kept), and setting and clearing a note was tried there.
+- **sessions** since 2026-11-13 (app): readings of one user taken at most
+  ten minutes after one another are shown as one line with the mean of all
+  of them, the first included (smile's choice, not the guideline's "drop
+  the first"). a tap unfolds the single readings. the chart draws one point
+  per session, the printed report a mean line with the readings in small
+  print below. display only: the database and the csv keep the single
+  readings. menu switch "group readings taken together", on by default
+  (`ui/Sessions.kt`, 4 tests). a second switch, "averages per session"
+  (on by default), makes the averages view, its calendar rings and the
+  report's per-user mean take the mean of the session means, so a sitting
+  with five readings no longer weighs five times; this deliberately departs
+  from the vendor app's numbers.
 - **aes** through standard libraries on both sides since 2026-11-08: the
   python tool uses the `cryptography` package (its only dependency besides
   bleak), the app `javax.crypto`. the hand-written aes-128 that the python

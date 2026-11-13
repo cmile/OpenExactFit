@@ -57,14 +57,14 @@ import java.time.temporal.WeekFields
  * evening) for the chosen day or the chosen span. one user's readings.
  */
 @Composable
-fun AveragesView(readings: List<StoredReading>, modifier: Modifier = Modifier) {
+fun AveragesView(readings: List<StoredReading>, modifier: Modifier = Modifier, bySession: Boolean = false) {
     val today = remember { LocalDate.now() }
     var monthText by rememberSaveable { mutableStateOf(YearMonth.from(today).toString()) }
     val month = YearMonth.parse(monthText)
     /** iso date of the selected day, empty when a span is selected instead */
     var selectedDay by rememberSaveable { mutableStateOf("") }
     var span by rememberSaveable { mutableIntStateOf(7) }
-    val marked = remember(readings, month) { daysWithReadings(readings, month) }
+    val marked = remember(readings, month, bySession) { daysWithReadings(readings, month, bySession) }
     val locale = LocalLocale.current.platformLocale
     val firstDayOfWeek = remember(locale) { WeekFields.of(locale).firstDayOfWeek }
 
@@ -126,17 +126,18 @@ fun AveragesView(readings: List<StoredReading>, modifier: Modifier = Modifier) {
         val title = chosenDay?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)) ?: stringResource(R.string.averages_last_days, span)
         val rows = if (chosenDay != null) readingsOn(readings, chosenDay) else readingsInLastDays(readings, span, today)
         Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-        val all = average(rows)
+        val all = average(rows, bySession)
         if (all == null) {
             Spacer(Modifier.height(8.dp))
             Text(stringResource(R.string.no_readings_in_range), style = MaterialTheme.typography.bodyMedium)
         } else {
             AverageRow(stringResource(R.string.averages_all), all)
-            average(rows.filter { !it.isEvening() })?.let { AverageRow(stringResource(R.string.averages_day), it) }
-            average(rows.filter { it.isEvening() })?.let { AverageRow(stringResource(R.string.averages_evening), it) }
+            average(rows.filter { !it.isEvening() }, bySession)?.let { AverageRow(stringResource(R.string.averages_day), it) }
+            average(rows.filter { it.isEvening() }, bySession)?.let { AverageRow(stringResource(R.string.averages_evening), it) }
             Spacer(Modifier.height(8.dp))
             Text(
-                stringResource(R.string.averages_hint, EVENING_HOUR),
+                stringResource(R.string.averages_hint, EVENING_HOUR) +
+                    if (bySession) " " + stringResource(R.string.averages_by_session_hint) else "",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -170,7 +171,8 @@ private fun AverageRow(label: String, a: Average) {
         Column(modifier = Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.bodyMedium)
             Text(
-                pluralStringResource(R.plurals.readings_count, a.count, a.count),
+                a.sessions?.let { pluralStringResource(R.plurals.sessions_count, it, it) + ", " }.orEmpty() +
+                    pluralStringResource(R.plurals.readings_count, a.count, a.count),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -10,6 +10,14 @@
     <string name="auto_sync">Beim Öffnen abgleichen</string>
     <string name="background_sync">Im Hintergrund abgleichen</string>
     <string name="show_log">Sync-Protokoll anzeigen</string>
+    <string name="group_sessions">Messreihen zusammenfassen</string>
+    <string name="average_sessions">Mittelwerte je Messreihe</string>
+    <plurals name="sessions_count">
+        <item quantity="one">%1$d Messreihe</item>
+        <item quantity="other">%1$d Messreihen</item>
+    </plurals>
+    <string name="averages_by_session_hint">Jede Messreihe (Messungen innerhalb von zehn Minuten) zählt einmal.</string>
+    <string name="session_mean">Mittel aus %1$s</string>
     <string name="background_running">Hintergrund-Abgleich ist an: Die App verbindet sich, sobald das Messgerät eingeschaltet wird.</string>
     <string name="no_readings">Noch keine Messungen. Messgerät einschalten, Abgleichen drücken, messen.</string>
     <string name="no_readings_for_user">Noch keine Messungen für %1$s.</string>

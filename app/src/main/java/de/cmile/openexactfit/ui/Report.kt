@@ -40,6 +40,10 @@ object Report {
         userName: (String?) -> String,
         labels: ReportLabels,
         now: LocalDateTime = LocalDateTime.now(),
+        /** print readings taken together as a mean line followed by the single readings in small print. */
+        sessions: Boolean = false,
+        /** the per-user mean counts each session once instead of each reading once. */
+        sessionMeans: Boolean = false,
     ): String = buildString {
         append("<!doctype html><html><head><meta charset=\"utf-8\"><title>").append(esc(labels.title)).append("</title><style>")
         append(
@@ -57,6 +61,9 @@ object Report {
             .band { display: inline-block; padding: 0 5pt; border-radius: 3pt; }
             .b0 { background: #dff0d8; } .b1 { background: #fff3c4; } .b2 { background: #ffe0c2; } .b3 { background: #f8cdd6; }
             .muted { color: #666; }
+            tr.mean td { font-weight: 600; }
+            tr.sub td { font-size: 9pt; color: #555; padding-top: 1pt; padding-bottom: 1pt; }
+            tr.sub td:first-child { padding-left: 14pt; }
             """.trimIndent()
         )
         append("</style></head><body>")
@@ -66,7 +73,7 @@ object Report {
         val users = readings.groupBy { it.user }.toSortedMap(compareBy<String?> { it == null }.thenBy { it })
         for ((user, rows) in users) {
             append("<h2>").append(esc(labels.user.format(userName(user)))).append("</h2>")
-            average(rows)?.let { a ->
+            average(rows, sessionMeans)?.let { a ->
                 append("<div class=\"meta\">").append(esc(labels.readings(a.count))).append(", ").append(esc(labels.average)).append(' ')
                 append(a.systolic).append('/').append(a.diastolic)
                 a.pulse?.let { append(", ").append(esc(labels.pulse).lowercase()).append(' ').append(it) }
@@ -78,16 +85,28 @@ object Report {
             for ((day, dayRows) in groupByDay(rows)) {
                 val dayText = runCatching { LocalDate.parse(day).format(DAY) }.getOrDefault(day)
                 append("<tr class=\"day\"><td colspan=\"6\">").append(esc(dayText)).append("</td></tr>")
-                for (r in dayRows) {
-                    val notes = r.flags.split(',').filter { it.isNotBlank() }.map { labels.flag(it) }.toMutableList()
-                    if (r.measuredAt == null) notes += labels.received
-                    r.note?.takeIf { it.isNotBlank() }?.let { notes += it }
-                    append("<tr><td>").append(esc(r.timeOfDay())).append("</td>")
-                    append("<td class=\"n\">").append(r.systolic).append("</td>")
-                    append("<td class=\"n\">").append(r.diastolic).append("</td>")
-                    append("<td class=\"n\">").append(r.pulse?.toString() ?: "").append("</td>")
-                    append("<td>").append(band(Category.of(r.systolic, r.diastolic), labels)).append("</td>")
-                    append("<td class=\"muted\">").append(esc(notes.joinToString(", "))).append("</td></tr>")
+                val groups = if (sessions) groupSessions(dayRows) else dayRows.map { Session(listOf(it)) }
+                for (s in groups) {
+                    if (!s.isSingle) {
+                        val a = s.average
+                        append("<tr class=\"mean\"><td>").append(esc(s.timeRange())).append("</td>")
+                        append("<td class=\"n\">").append(a.systolic).append("</td>")
+                        append("<td class=\"n\">").append(a.diastolic).append("</td>")
+                        append("<td class=\"n\">").append(a.pulse?.toString() ?: "").append("</td>")
+                        append("<td>").append(band(a.category, labels)).append("</td>")
+                        append("<td class=\"muted\">").append(esc(labels.average + ", " + labels.readings(a.count))).append("</td></tr>")
+                    }
+                    for (r in s.readings) {
+                        val notes = r.flags.split(',').filter { it.isNotBlank() }.map { labels.flag(it) }.toMutableList()
+                        if (r.measuredAt == null) notes += labels.received
+                        r.note?.takeIf { it.isNotBlank() }?.let { notes += it }
+                        append(if (s.isSingle) "<tr><td>" else "<tr class=\"sub\"><td>").append(esc(r.timeOfDay())).append("</td>")
+                        append("<td class=\"n\">").append(r.systolic).append("</td>")
+                        append("<td class=\"n\">").append(r.diastolic).append("</td>")
+                        append("<td class=\"n\">").append(r.pulse?.toString() ?: "").append("</td>")
+                        append("<td>").append(band(Category.of(r.systolic, r.diastolic), labels)).append("</td>")
+                        append("<td class=\"muted\">").append(esc(notes.joinToString(", "))).append("</td></tr>")
+                    }
                 }
             }
             append("</table>")

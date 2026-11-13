@@ -88,17 +88,41 @@ fun dayLabel(day: String): String {
 fun ReadingsList(
     readings: List<StoredReading>,
     showUser: Boolean,
+    /** show readings taken together as one line with their mean; a tap unfolds them. */
+    sessions: Boolean,
     userName: (String?) -> String,
     onDelete: (Long) -> Unit,
     onNote: (Long, String) -> Unit,
 ) {
     var selected by remember { mutableStateOf<StoredReading?>(null) }
+    /** unfolded sessions, by the id of their earliest reading */
+    var unfolded by remember { mutableStateOf(setOf<Long>()) }
     LazyColumn {
         for ((day, rows) in groupByDay(readings)) {
             item(key = "day-$day") { DayHeader(day, rows.size) }
-            items(rows, key = { it.id }) { r ->
-                ReadingRow(r, if (showUser) userName(r.user) else null, onClick = { selected = r })
-                HorizontalDivider()
+            if (!sessions) {
+                items(rows, key = { it.id }) { r ->
+                    ReadingRow(r, if (showUser) userName(r.user) else null, onClick = { selected = r })
+                    HorizontalDivider()
+                }
+            } else for (s in groupSessions(rows)) {
+                if (s.isSingle) {
+                    item(key = s.earliest.id) {
+                        ReadingRow(s.earliest, if (showUser) userName(s.earliest.user) else null, onClick = { selected = s.earliest })
+                        HorizontalDivider()
+                    }
+                } else {
+                    val key = s.earliest.id
+                    val open = key in unfolded
+                    item(key = "session-$key") {
+                        SessionRow(s, if (showUser) userName(s.earliest.user) else null, onClick = { unfolded = if (open) unfolded - key else unfolded + key })
+                        HorizontalDivider()
+                    }
+                    if (open) items(s.readings, key = { it.id }) { r ->
+                        ReadingRow(r, null, nested = true, onClick = { selected = r })
+                        HorizontalDivider()
+                    }
+                }
             }
         }
     }
@@ -129,11 +153,43 @@ private fun DayHeader(day: String, count: Int) {
     }
 }
 
+/** several readings of one sitting as one line: when they were taken, how many, and their mean. */
 @Composable
-private fun ReadingRow(r: StoredReading, userName: String?, onClick: () -> Unit) {
-    val flags = flagText(r.flags)
+private fun SessionRow(s: Session, userName: String?, onClick: () -> Unit) {
+    val a = s.average
+    val flags = flagText(s.readings.flatMap { it.flags.split(',') }.filter { it.isNotBlank() }.distinct().joinToString(","))
+    val notes = s.readings.mapNotNull { it.note?.takeIf { n -> n.isNotBlank() } }.distinct().joinToString(" · ")
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(s.earliest.timeOfDay(), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(52.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            if (userName != null) Text(userName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(R.string.session_mean, pluralStringResource(R.plurals.readings_count, a.count, a.count)),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary,
+            )
+            if (flags.isNotEmpty()) Text(flags, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            if (notes.isNotEmpty()) Text(
+                notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
+            )
+        }
+        CategoryDot(a.category)
+        Spacer(Modifier.width(8.dp))
+        Text("${a.systolic}/${a.diastolic}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.width(12.dp))
+        Text(a.pulse?.let { "♥ $it" } ?: "", style = MaterialTheme.typography.bodyMedium, softWrap = false, modifier = Modifier.width(64.dp))
+    }
+}
+
+@Composable
+private fun ReadingRow(r: StoredReading, userName: String?, nested: Boolean = false, onClick: () -> Unit) {
+    val flags = flagText(r.flags)
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
+            .padding(start = if (nested) 24.dp else 0.dp, top = if (nested) 6.dp else 10.dp, bottom = if (nested) 6.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(r.timeOfDay(), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(52.dp))
@@ -147,7 +203,11 @@ private fun ReadingRow(r: StoredReading, userName: String?, onClick: () -> Unit)
         }
         CategoryDot(Category.of(r.systolic, r.diastolic))
         Spacer(Modifier.width(8.dp))
-        Text("${r.systolic}/${r.diastolic}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Text(
+            "${r.systolic}/${r.diastolic}",
+            style = if (nested) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+            fontWeight = if (nested) FontWeight.Normal else FontWeight.SemiBold,
+        )
         Spacer(Modifier.width(12.dp))
         Text(r.pulse?.let { "♥ $it" } ?: "", style = MaterialTheme.typography.bodyMedium, softWrap = false, modifier = Modifier.width(64.dp))
     }

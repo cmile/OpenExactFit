@@ -26,4 +26,17 @@ class ReportTest {
         assertTrue(html.contains(">high<"))
         assertTrue(html.indexOf("user &lt;smile&gt;") < html.indexOf("user B"))
     }
+
+    @Test fun sessionsPrintAMeanLineAboveTheirReadings() {
+        val rows = listOf(
+            StoredReading(2, "AA:BB", "A", "2026-11-06 07:44:00", "r", 120, 84, 72, "", "1e"),
+            StoredReading(1, "AA:BB", "A", "2026-11-06 07:40:00", "r", 126, 88, 76, "", "1e"),
+        )
+        val html = Report.html(rows, { it ?: "?" }, labels, LocalDateTime.of(2026, 11, 7, 9, 0), sessions = true)
+        assertTrue(html.contains("<tr class=\"mean\"><td>07:40–07:44</td><td class=\"n\">123</td><td class=\"n\">86</td><td class=\"n\">74</td>"))
+        assertTrue(html.contains("average, 2 readings"))
+        assertTrue(html.contains("<tr class=\"sub\"><td>07:44</td>"))
+        val plain = Report.html(rows, { it ?: "?" }, labels, LocalDateTime.of(2026, 11, 7, 9, 0))
+        assertTrue(!plain.contains("class=\"mean\""))
+    }
 }

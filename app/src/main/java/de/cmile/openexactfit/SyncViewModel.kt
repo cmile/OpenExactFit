@@ -37,6 +37,10 @@ data class UiState(
     val backgroundRunning: Boolean = false,
     /** the menu switch for the session log card. */
     val showLog: Boolean = false,
+    /** the menu switch for showing sessions (readings taken together) as one line. */
+    val groupSessions: Boolean = true,
+    /** the menu switch: averages count each session once instead of each reading once. */
+    val averageSessions: Boolean = true,
 ) {
     val visibleReadings: List<StoredReading>
         get() = if (userFilter == null) readings else readings.filter { it.user == userFilter }
@@ -53,6 +57,7 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         UiState(
             userNames = settings.userNames(), autoSync = settings.autoSync,
             backgroundSync = settings.backgroundSync, showLog = settings.showLog,
+            groupSessions = settings.groupSessions, averageSessions = settings.averageSessions,
         )
     )
     val state: StateFlow<UiState> = _state
@@ -104,6 +109,16 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
     fun setShowLog(on: Boolean) {
         settings.showLog = on
         _state.update { it.copy(showLog = on) }
+    }
+
+    fun setAverageSessions(on: Boolean) {
+        settings.averageSessions = on
+        _state.update { it.copy(averageSessions = on) }
+    }
+
+    fun setGroupSessions(on: Boolean) {
+        settings.groupSessions = on
+        _state.update { it.copy(groupSessions = on) }
     }
 
     /** switches the foreground service on or off; the screen's own sync stops first so only one client talks to the monitor. */

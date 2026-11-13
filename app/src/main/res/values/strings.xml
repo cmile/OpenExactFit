@@ -14,6 +14,15 @@
     <string name="auto_sync">Sync when opened</string>
     <string name="background_sync">Sync in the background</string>
     <string name="show_log">Show sync log</string>
+    <string name="group_sessions">Group readings taken together</string>
+    <string name="average_sessions">Averages per session</string>
+    <plurals name="sessions_count">
+        <item quantity="one">%1$d session</item>
+        <item quantity="other">%1$d sessions</item>
+    </plurals>
+    <string name="averages_by_session_hint">Each session (readings taken within ten minutes) counts once.</string>
+    <!-- %1$s is the readings_count plural, e.g. "3 readings" -->
+    <string name="session_mean">Mean of %1$s</string>
     <string name="background_running">Background sync is on: the app connects whenever the monitor is switched on.</string>
     <string name="no_readings">No readings yet. Switch the monitor on, press Sync, measure.</string>
     <string name="no_readings_for_user">No readings for %1$s yet.</string>

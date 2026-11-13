@@ -102,6 +102,7 @@ the python tool. `app/src/main/java/de/cmile/openexactfit/`:
 | `ui/Trend.kt`, `ui/TrendChart.kt` | ranges, least-squares trend and axis maths (tested); the compose canvas chart |
 | `ui/Category.kt`, `ui/Averages.kt`, `ui/AveragesView.kt` | the blood pressure bands, the means and the calendar view |
 | `ui/Report.kt` | the html report for printing, one section per user |
+| `ui/Sessions.kt` | readings taken within ten minutes shown as one line with their mean (display only) |
 
 **background sync** ("sync in the background" in the menu) starts a
 foreground service with a persistent notification. it runs a filtered,
