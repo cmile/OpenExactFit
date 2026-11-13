@@ -80,6 +80,10 @@ import de.cmile.openexactfit.ui.Report
 import de.cmile.openexactfit.ui.ReportLabels
 import de.cmile.openexactfit.ui.TrendChart
 import de.cmile.openexactfit.ui.UserNamesDialog
+import de.cmile.openexactfit.ui.PROTOCOL_EVENING_HOUR
+import de.cmile.openexactfit.ui.PROTOCOL_MORNING_END_HOUR
+import de.cmile.openexactfit.ui.WeekLabels
+import de.cmile.openexactfit.ui.WeekProtocolDialog
 import de.cmile.openexactfit.ui.groupSessions
 import de.cmile.openexactfit.ui.theme.OpenExactFitTheme
 import de.cmile.openexactfit.data.MeasurementStore
@@ -124,6 +128,22 @@ fun reportLabels(context: Context) = ReportLabels(
     flag = { f -> FLAG_LABELS[f]?.let(context::getString) ?: f.replace('_', ' ') },
 )
 
+fun weekLabels(context: Context) = WeekLabels(
+    title = context.getString(R.string.protocol_title),
+    printed = context.getString(R.string.report_printed),
+    user = context.getString(R.string.user_label),
+    day = context.getString(R.string.protocol_day),
+    morning = context.getString(R.string.protocol_morning),
+    evening = context.getString(R.string.protocol_evening),
+    pulse = context.getString(R.string.series_pulse),
+    notCounted = context.getString(R.string.protocol_not_counted),
+    means = context.getString(R.string.protocol_means),
+    overall = context.getString(R.string.protocol_overall),
+    slots = context.getString(R.string.protocol_slots),
+    hint = context.getString(R.string.protocol_hint, PROTOCOL_MORNING_END_HOUR, PROTOCOL_EVENING_HOUR),
+    category = { c -> context.getString(c.label) },
+)
+
 /** kept alive while the print framework renders from it; it does so asynchronously after the dialog opens. */
 private var printWebView: WebView? = null
 
@@ -156,6 +176,7 @@ fun App(vm: SyncViewModel = viewModel()) {
     var problem by remember { mutableStateOf<Problem?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     var namesOpen by remember { mutableStateOf(false) }
+    var protocolOpen by remember { mutableStateOf(false) }
     /** 0 list, 1 chart, 2 averages */
     var view by rememberSaveable { mutableIntStateOf(0) }
     var range by rememberSaveable { mutableStateOf(ChartRange.MONTH) }
@@ -265,6 +286,11 @@ fun App(vm: SyncViewModel = viewModel()) {
                             text = { Text(stringResource(R.string.print)) },
                             enabled = state.visibleReadings.isNotEmpty(),
                             onClick = { menuOpen = false; print() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.week_protocol)) },
+                            enabled = state.readings.isNotEmpty(),
+                            onClick = { menuOpen = false; protocolOpen = true },
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.export_csv)) },
@@ -390,6 +416,28 @@ fun App(vm: SyncViewModel = viewModel()) {
         onSave = { vm.setUserNames(it); namesOpen = false },
         onDismiss = { namesOpen = false },
     )
+
+    if (protocolOpen) {
+        // one person per protocol: with "all" selected and two users with readings, ask for a choice first
+        val users = state.readings.map { it.user }.distinct()
+        if (state.userFilter == null && users.size > 1) {
+            AlertDialog(
+                onDismissRequest = { protocolOpen = false },
+                title = { Text(stringResource(R.string.week_protocol)) },
+                text = { Text(stringResource(R.string.averages_pick_user)) },
+                confirmButton = { TextButton(onClick = { protocolOpen = false }) { Text(stringResource(R.string.close)) } },
+            )
+        } else {
+            val name = state.userName(state.userFilter ?: users.firstOrNull())
+            val title = stringResource(R.string.protocol_title)
+            WeekProtocolDialog(
+                readings = state.visibleReadings,
+                userName = name,
+                onPrint = { p -> printHtml(context, Report.weekHtml(p, name, weekLabels(context)), title) },
+                onDismiss = { protocolOpen = false },
+            )
+        }
+    }
 
     importResult?.let { r ->
         AlertDialog(

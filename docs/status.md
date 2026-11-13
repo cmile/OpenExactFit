@@ -77,6 +77,15 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   report's per-user mean take the mean of the session means, so a sitting
   with five readings no longer weighs five times; this deliberately departs
   from the vendor app's numbers.
+- **7-day protocol** since 2026-11-13 (app, menu): the home measurement
+  protocol doctors ask for. seven days picked with arrows (default: the
+  week ending with the latest reading), per day one morning value (before
+  12:00) and one evening value (from 17:00), each the mean of everything
+  measured in that window; day 1 is shown but left out; below it the means
+  of days 2..7 for morning, evening and overall, each value weighing the
+  same, and how many of the twelve values exist. prints as one sheet
+  (`ui/WeekProtocol.kt`, `ui/WeekProtocolDialog.kt`, `Report.weekHtml`,
+  4 tests). built and unit-tested, not yet looked at on the phone.
 - **aes** through standard libraries on both sides since 2026-11-08: the
   python tool uses the `cryptography` package (its only dependency besides
   bleak), the app `javax.crypto`. the hand-written aes-128 that the python
@@ -157,6 +166,35 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
       build would let f-droid ship the apk under this project's own key.
 - [x] a german translation of the ui strings (`values-de`); keep it in step
       when strings change.
+
+### ideas beyond the vendor app
+
+collected on 2026-11-13; none of these is promised, the order is by expected
+use. sessions, averages per session and the 7-day protocol came from this
+list and are done.
+
+- [ ] reminders: fixed times morning and evening; the notification goes
+      away by itself once a reading arrives in the time window.
+- [ ] automatic backup: after every sync a csv into a folder the owner
+      picked (e.g. a nextcloud folder). also solves the backup problem when
+      moving from the debug to the release build, and with an import on the
+      other side it keeps phone and computer in step.
+- [ ] morning against evening and weekdays: is the pressure higher in the
+      morning, lower at weekends. the data is there.
+- [ ] tags instead of free notes: tappable markers (coffee, sport, stress,
+      medication taken) and a comparison "with and without".
+- [ ] medication changes as markers: a date with a text, a vertical line in
+      the chart, the mean before and after.
+- [ ] spread and pulse pressure: standard deviation and systolic minus
+      diastolic as extra figures.
+- [ ] health connect: write blood pressure and pulse into android's health
+      store, local and without an account.
+- [ ] home assistant over mqtt, from the python tool first (see below).
+- [ ] live cuff pressure during inflation; the characteristic exists
+      (`77ab1c51-…`).
+- [ ] a home screen widget with the last reading and the week's mean.
+- [ ] a settings screen: the menu has grown to ten entries, the switches
+      belong in a dialog of their own.
 
 ### python tool
 

@@ -26,6 +26,26 @@ data class ReportLabels(
     val flag: (String) -> String,
 )
 
+/** the words of the 7-day protocol sheet. */
+data class WeekLabels(
+    val title: String,
+    /** with one %s for the date */
+    val printed: String,
+    /** with one %s for the user's name */
+    val user: String,
+    val day: String,
+    val morning: String,
+    val evening: String,
+    val pulse: String,
+    val notCounted: String,
+    val means: String,
+    val overall: String,
+    /** with two %d: filled and expected values */
+    val slots: String,
+    val hint: String,
+    val category: (Category) -> String,
+)
+
 /**
  * a printable html page of the readings, one section per user with the mean on top and a
  * table grouped by day. android's print framework renders it through a webview, and its
@@ -116,6 +136,50 @@ object Report {
 
     private fun band(c: Category, labels: ReportLabels): String =
         "<span class=\"band b${c.ordinal}\">" + esc(labels.category(c)) + "</span>"
+
+    /** the 7-day protocol as one sheet: a row per day with its morning and evening value, the means below. */
+    fun weekHtml(p: WeekProtocol, userName: String, labels: WeekLabels, now: LocalDateTime = LocalDateTime.now()): String = buildString {
+        fun cell(a: Average?): String =
+            if (a == null) "<td class=\"muted\">–</td>"
+            else "<td>${a.systolic}/${a.diastolic}" + (a.pulse?.let { " <span class=\"muted\">${esc(labels.pulse)} $it</span>" } ?: "") +
+                " <span class=\"band b${a.category.ordinal}\">${esc(labels.category(a.category))}</span></td>"
+        append("<!doctype html><html><head><meta charset=\"utf-8\"><title>").append(esc(labels.title)).append("</title><style>")
+        append(
+            """
+            @page { margin: 15mm; }
+            body { font-family: sans-serif; font-size: 11pt; color: #222; }
+            h1 { font-size: 16pt; margin: 0 0 2pt; }
+            h2 { font-size: 13pt; margin: 14pt 0 4pt; }
+            .meta { color: #666; font-size: 9pt; margin-bottom: 8pt; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border-bottom: 1px solid #ccc; padding: 5pt 6pt; text-align: left; }
+            th { font-weight: 600; border-bottom: 2px solid #999; }
+            tr.out td { color: #999; }
+            tr.sum td { font-weight: 600; border-bottom: 0; }
+            tr.first td { border-top: 2px solid #999; }
+            .band { display: inline-block; padding: 0 5pt; border-radius: 3pt; font-weight: 400; color: #222; }
+            .b0 { background: #dff0d8; } .b1 { background: #fff3c4; } .b2 { background: #ffe0c2; } .b3 { background: #f8cdd6; }
+            .muted { color: #666; font-weight: 400; }
+            """.trimIndent()
+        )
+        append("</style></head><body>")
+        append("<h1>").append(esc(labels.title)).append("</h1>")
+        append("<div class=\"meta\">").append(esc(labels.printed.format(now.format(STAMP)))).append("</div>")
+        append("<h2>").append(esc(labels.user.format(userName))).append(", ")
+        append(esc(p.days.first().date.format(DAY))).append(" – ").append(esc(p.days.last().date.format(DAY))).append("</h2>")
+        append("<table><tr><th>").append(esc(labels.day)).append("</th><th>").append(esc(labels.morning)).append("</th><th>")
+        append(esc(labels.evening)).append("</th></tr>")
+        for ((i, d) in p.days.withIndex()) {
+            append(if (i == 0) "<tr class=\"out\"><td>" else "<tr><td>").append(esc(d.date.format(DAY)))
+            if (i == 0) append(" (").append(esc(labels.notCounted)).append(")")
+            append("</td>").append(cell(d.morning)).append(cell(d.evening)).append("</tr>")
+        }
+        append("<tr class=\"sum first\"><td>").append(esc(labels.means)).append("</td>").append(cell(p.morning)).append(cell(p.evening)).append("</tr>")
+        append("<tr class=\"sum\"><td>").append(esc(labels.overall)).append("</td>").append(cell(p.overall).replace("<td>", "<td colspan=\"2\">")).append("</tr>")
+        append("</table>")
+        append("<p class=\"meta\">").append(esc(labels.slots.format(p.filled, p.expected))).append("<br>").append(esc(labels.hint)).append("</p>")
+        append("</body></html>")
+    }
 
     fun esc(s: String): String =
         s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")

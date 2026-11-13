@@ -36,16 +36,20 @@ fun average(readings: List<StoredReading>): Average? {
  * the mean of the session means: a sitting with five readings then weighs as much as one
  * with a single reading, instead of five times as much. [readings] newest first.
  */
-fun averageBySession(readings: List<StoredReading>): Average? {
-    if (readings.isEmpty()) return null
-    val groups = groupSessions(readings)
-    val pulses = groups.mapNotNull { g -> g.readings.mapNotNull { it.pulse }.takeIf { it.isNotEmpty() }?.average() }
+fun averageBySession(readings: List<StoredReading>): Average? =
+    averageOfGroups(groupSessions(readings).map { it.readings })
+
+/** the mean of the group means, every non-empty group weighing the same; null without readings. */
+fun averageOfGroups(groups: List<List<StoredReading>>): Average? {
+    val filled = groups.filter { it.isNotEmpty() }
+    if (filled.isEmpty()) return null
+    val pulses = filled.mapNotNull { g -> g.mapNotNull { it.pulse }.takeIf { it.isNotEmpty() }?.average() }
     return Average(
-        count = readings.size,
-        systolic = Math.round(groups.map { g -> g.readings.map { it.systolic }.average() }.average()).toInt(),
-        diastolic = Math.round(groups.map { g -> g.readings.map { it.diastolic }.average() }.average()).toInt(),
+        count = filled.sumOf { it.size },
+        systolic = Math.round(filled.map { g -> g.map { it.systolic }.average() }.average()).toInt(),
+        diastolic = Math.round(filled.map { g -> g.map { it.diastolic }.average() }.average()).toInt(),
         pulse = if (pulses.isEmpty()) null else Math.round(pulses.average()).toInt(),
-        sessions = groups.size,
+        sessions = filled.size,
     )
 }
 

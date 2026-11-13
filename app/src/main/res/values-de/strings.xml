@@ -104,6 +104,17 @@
     <string name="report_average">Mittelwert</string>
     <string name="report_received">Empfangszeit, Uhr nicht gestellt</string>
 
+    <string name="week_protocol">7-Tage-Protokoll</string>
+    <string name="protocol_title">Blutdruck, 7-Tage-Protokoll</string>
+    <string name="protocol_day">Tag</string>
+    <string name="protocol_morning">Morgens</string>
+    <string name="protocol_evening">Abends</string>
+    <string name="protocol_not_counted">Tag 1, nicht gewertet</string>
+    <string name="protocol_means">Mittel Tag 2–7</string>
+    <string name="protocol_overall">Gesamtmittel Tag 2–7</string>
+    <string name="protocol_slots">%1$d von %2$d Morgen- und Abendwerten vorhanden.</string>
+    <string name="protocol_hint">Morgens: vor %1$d Uhr, abends: ab %2$d Uhr; alle Messungen eines Zeitfensters ergeben einen Wert, jeder Wert zählt einmal. Tag 1 bleibt außen vor, wie es die Leitlinien zur Heimmessung empfehlen. Grenzwert für Heimmessungen: 135/85 mmHg.</string>
+
     <string name="import_title">CSV-Import</string>
     <string name="import_result">%1$d neue Messungen, %2$d schon vorhanden, %3$d unlesbare Zeilen.</string>
     <string name="import_failed">Die Datei konnte nicht gelesen werden.</string>

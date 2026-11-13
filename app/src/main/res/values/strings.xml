@@ -120,6 +120,18 @@
     <string name="report_average">Average</string>
     <string name="report_received">Time of receipt, clock not set</string>
 
+    <!-- 7-day protocol; %1$d and %2$d in the hint are the hours that end the morning and start the evening -->
+    <string name="week_protocol">7-day protocol</string>
+    <string name="protocol_title">Blood pressure, 7-day protocol</string>
+    <string name="protocol_day">Day</string>
+    <string name="protocol_morning">Morning</string>
+    <string name="protocol_evening">Evening</string>
+    <string name="protocol_not_counted">day 1, not counted</string>
+    <string name="protocol_means">Means of days 2–7</string>
+    <string name="protocol_overall">Overall mean, days 2–7</string>
+    <string name="protocol_slots">%1$d of %2$d morning and evening values present.</string>
+    <string name="protocol_hint">Morning: before %1$d:00, evening: from %2$d:00; all readings in a window make one value, each value counts once. Day 1 is left out, as the guidelines for home measurement recommend. Threshold for home readings: 135/85 mmHg.</string>
+
     <!-- csv import -->
     <string name="import_title">CSV import</string>
     <string name="import_result">%1$d new readings, %2$d already stored, %3$d unreadable lines.</string>
