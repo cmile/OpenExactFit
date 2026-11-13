@@ -81,6 +81,7 @@ object Report {
                 for (r in dayRows) {
                     val notes = r.flags.split(',').filter { it.isNotBlank() }.map { labels.flag(it) }.toMutableList()
                     if (r.measuredAt == null) notes += labels.received
+                    r.note?.takeIf { it.isNotBlank() }?.let { notes += it }
                     append("<tr><td>").append(esc(r.timeOfDay())).append("</td>")
                     append("<td class=\"n\">").append(r.systolic).append("</td>")
                     append("<td class=\"n\">").append(r.diastolic).append("</td>")

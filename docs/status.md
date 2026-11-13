@@ -57,6 +57,14 @@ verified on the real monitor (firmware 1.0.14 / A01.003, no encryption):
   properly (the flags column holds commas). 2 python tests, 3 kotlin tests.
 - **deduplication** on monitor, user, timestamp and the three values, in
   both stores, with migration of older database files.
+- **notes** since 2026-11-13: the owner can attach a note to a reading (app:
+  text field in the detail dialog, shown in the list and in the printed
+  report's notes column; python: `exactfit note ID text`, shown by `list`).
+  both stores gained a nullable `note` column (schema version 3, older
+  files are migrated on opening); csv export and import carry it, and an
+  import never overwrites a note that is already there. the app's
+  migration ran on the phone's real database on 2026-11-13 (63 readings
+  kept), and setting and clearing a note was tried there.
 - **aes** through standard libraries on both sides since 2026-11-08: the
   python tool uses the `cryptography` package (its only dependency besides
   bleak), the app `javax.crypto`. the hand-written aes-128 that the python

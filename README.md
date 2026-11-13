@@ -46,6 +46,7 @@ exactfit listen            # live readings only
 exactfit history           # stored readings only (deletes nothing on the monitor)
 exactfit list              # stored measurements
 exactfit list --user A
+exactfit note 12 after coffee   # attach a note to reading 12 (ids are the first column of list); no text clears it
 exactfit export > bp.csv   # csv on stdout
 exactfit import bp.csv     # read a csv export back in (this tool's or the android app's), deduplicated
 exactfit explore           # dump gatt table and readable characteristics (no writes)
@@ -76,7 +77,7 @@ minimum android 13 (api 33). one screen: a sync button (and a scan on start,
 switchable in the menu), the readings grouped by day with the monitor's
 warnings in words and a coloured dot for the blood pressure band (the vendor
 app's chart: normal below 135/85, elevated, high, crisis from 180/110), a user
-A/B filter, names for the two users, details and
+A/B filter, names for the two users, details, a note of your own and
 delete per reading (from the app's database only), a chart view with a trend
 line per series and the 135/85 and 140/90 guideline lines over a week, month,
 quarter or everything, an averages view with a month calendar and the means

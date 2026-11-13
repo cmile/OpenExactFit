@@ -237,8 +237,9 @@ def cmd_list(args) -> int:
     rows = Store(args.db).all(args.user)
     for r in rows:
         flags = f" [{r['flags']}]" if r["flags"] else ""
-        print(f"{r['measured_at'] or r['received_at']}  user {r['user'] or '?'}  "
-              f"{r['systolic']}/{r['diastolic']}  pulse {r['pulse']}{flags}")
+        note = f"  # {r['note']}" if r["note"] else ""
+        print(f"{r['id']:>4}  {r['measured_at'] or r['received_at']}  user {r['user'] or '?'}  "
+              f"{r['systolic']}/{r['diastolic']}  pulse {r['pulse']}{flags}{note}")
     if not rows:
         print("no measurements stored", file=sys.stderr)
     return 0
@@ -247,6 +248,14 @@ def cmd_list(args) -> int:
 def cmd_export(args) -> int:
     store = Store(args.db)
     store.export_csv(store.all(args.user))
+    return 0
+
+
+def cmd_note(args) -> int:
+    """set or clear the owner's note on a reading; the id is the first column of `list`."""
+    if not Store(args.db).set_note(args.id, " ".join(args.text)):
+        print(f"no reading with id {args.id}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -302,6 +311,11 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("import", help="read a csv export (this tool's or the android app's) into the database")
     s.add_argument("file", help="csv file, or - for stdin")
     s.set_defaults(func=cmd_import, is_async=False)
+
+    s = sub.add_parser("note", help="attach a note to a reading (id from `list`); no text clears it")
+    s.add_argument("id", type=int)
+    s.add_argument("text", nargs="*")
+    s.set_defaults(func=cmd_note, is_async=False)
 
     args = p.parse_args(argv)
     logging.basicConfig(

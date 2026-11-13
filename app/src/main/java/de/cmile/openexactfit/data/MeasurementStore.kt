@@ -24,9 +24,11 @@ data class StoredReading(
     val pulse: Int?,
     val flags: String,
     val rawHex: String,
+    /** what the owner wrote about this reading; not from the monitor. */
+    val note: String? = null,
 )
 
-class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measurements.sqlite", null, 2) {
+class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measurements.sqlite", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -41,7 +43,8 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
                 map_field integer not null,
                 pulse integer,
                 flags text,
-                raw_hex text not null
+                raw_hex text not null,
+                note text
             )"""
         )
         // one row per reading. the monitor sends the same reading twice with different
@@ -67,14 +70,17 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
                     map_field, pulse, flags, raw_hex from measurements_old order by id"""
             )
             db.execSQL("drop table measurements_old")
+        } else if (oldVersion < 3) {
+            // version 3 adds the owner's note; the rebuild above creates it already
+            db.execSQL("alter table measurements add column note text")
         }
     }
 
     /**
      * stores a reading; false if this reading from this monitor is already there.
-     * [receivedAt] defaults to now; an import passes the original time along.
+     * [receivedAt] defaults to now; an import passes the original time and the note along.
      */
-    fun add(m: Protocol.Measurement, device: String, receivedAt: String? = null): Boolean {
+    fun add(m: Protocol.Measurement, device: String, receivedAt: String? = null, note: String? = null): Boolean {
         val values = ContentValues().apply {
             put("device", device)
             put("user", m.user)
@@ -86,6 +92,7 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
             if (m.pulse != null) put("pulse", m.pulse) else putNull("pulse")
             put("flags", m.flags.joinToString(","))
             put("raw_hex", m.raw.toHex())
+            if (note.isNullOrBlank()) putNull("note") else put("note", note.trim())
         }
         val fresh = writableDatabase.insertWithOnConflict("measurements", null, values, SQLiteDatabase.CONFLICT_IGNORE) != -1L
         if (fresh) changed()
@@ -93,7 +100,7 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
     }
 
     fun all(): List<StoredReading> = readableDatabase.rawQuery(
-        "select id, device, user, measured_at, received_at, systolic, diastolic, pulse, flags, raw_hex " +
+        "select id, device, user, measured_at, received_at, systolic, diastolic, pulse, flags, raw_hex, note " +
             "from measurements order by coalesce(measured_at, received_at) desc, id desc", null
     ).use { c ->
         buildList {
@@ -104,6 +111,7 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
                     systolic = c.getInt(5), diastolic = c.getInt(6),
                     pulse = if (c.isNull(7)) null else c.getInt(7),
                     flags = c.getString(8) ?: "", rawHex = c.getString(9),
+                    note = c.getString(10),
                 )
             )
         }
@@ -116,11 +124,29 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
         return gone
     }
 
+    /** the owner's note on a reading; blank clears it. */
+    fun setNote(id: Long, note: String?): Boolean {
+        val values = ContentValues().apply { if (note.isNullOrBlank()) putNull("note") else put("note", note.trim()) }
+        val done = writableDatabase.update("measurements", values, "id = ?", arrayOf(id.toString())) == 1
+        if (done) changed()
+        return done
+    }
+
+    /** gives the stored copy of [m] this note, unless it already has one. */
+    private fun fillNote(m: Protocol.Measurement, device: String, note: String) {
+        writableDatabase.execSQL(
+            "update measurements set note = ? where device = ? and coalesce(user, '') = ? and coalesce(measured_at, '') = ? " +
+                "and systolic = ? and diastolic = ? and coalesce(pulse, -1) = ? and coalesce(note, '') = ''",
+            arrayOf<Any>(note, device, m.user ?: "", m.timestamp?.format(FORMAT) ?: "", m.systolic, m.diastolic, m.pulse ?: -1),
+        )
+        changed()
+    }
+
     fun csv(): String = buildString {
-        appendLine("id,device,user,measured_at,received_at,systolic,diastolic,pulse,flags,raw_hex")
+        appendLine("id,device,user,measured_at,received_at,systolic,diastolic,pulse,flags,raw_hex,note")
         for (r in all().asReversed()) appendLine(
             listOf(r.id, r.device, r.user ?: "", r.measuredAt ?: "", r.receivedAt, r.systolic, r.diastolic,
-                r.pulse ?: "", r.flags, r.rawHex).joinToString(",") { csvField(it.toString()) }
+                r.pulse ?: "", r.flags, r.rawHex, r.note ?: "").joinToString(",") { csvField(it.toString()) }
         )
     }
 
@@ -129,7 +155,8 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
     /**
      * reads an export of either client back in. every reading is re-parsed from its
      * `raw_hex`, so the python export (which has a `map_field` column) and our own both
-     * work, and the usual deduplication applies. device and receipt time come from the file.
+     * work, and the usual deduplication applies. device, receipt time and note come from the
+     * file; a reading that is already stored without a note gets the file's.
      */
     fun importCsv(text: String): ImportResult {
         var fresh = 0
@@ -143,7 +170,13 @@ class MeasurementStore(context: Context) : SQLiteOpenHelper(context, "measuremen
                 continue
             }
             val device = r["device"].orEmpty().ifBlank { "?" }
-            if (add(m, device, r["received_at"]?.takeIf { it.isNotBlank() })) fresh++ else duplicates++
+            val note = r["note"].orEmpty().trim()
+            if (add(m, device, r["received_at"]?.takeIf { it.isNotBlank() }, note)) {
+                fresh++
+            } else {
+                duplicates++
+                if (note.isNotEmpty()) fillNote(m, device, note)
+            }
         }
         return ImportResult(fresh, duplicates, unreadable)
     }

@@ -23,7 +23,8 @@ create table if not exists measurements (
     map_field integer not null,
     pulse integer,
     flags text,
-    raw_hex text not null
+    raw_hex text not null,
+    note text
 );
 -- one row per reading. the monitor sends the same reading twice with different
 -- raw bytes (live and from storage, bytes 5..6 differ), so raw_hex cannot be the key.
@@ -31,11 +32,15 @@ create unique index if not exists measurements_reading on measurements (
     device, coalesce(user, ''), coalesce(measured_at, ''),
     systolic, diastolic, coalesce(pulse, -1)
 );
-pragma user_version = 2;
+pragma user_version = 3;
 """
 
 COLUMNS = ("id", "device", "user", "measured_at", "received_at",
-           "systolic", "diastolic", "map_field", "pulse", "flags", "raw_hex")
+           "systolic", "diastolic", "map_field", "pulse", "flags", "raw_hex", "note")
+
+# the dedupe key as a where clause, for finding the stored copy of a reading
+_SAME_READING = ("device = ? and coalesce(user, '') = ? and coalesce(measured_at, '') = ? "
+                 "and systolic = ? and diastolic = ? and coalesce(pulse, -1) = ?")
 
 
 class Store:
@@ -60,7 +65,7 @@ class Store:
             self.conn.executescript(
                 "begin;"
                 "alter table measurements rename to measurements_old;"
-                + SCHEMA.replace("pragma user_version = 2;", "")
+                + SCHEMA.replace("pragma user_version = 3;", "")
                 + "insert or ignore into measurements (device, user, measured_at, received_at,"
                 " systolic, diastolic, map_field, pulse, flags, raw_hex)"
                 " select device, user, measured_at, received_at, systolic, diastolic,"
@@ -68,18 +73,24 @@ class Store:
                 "drop table measurements_old;"
                 "commit;"
             )
+        cols = {row[1] for row in self.conn.execute("pragma table_info(measurements)")}
+        if "note" not in cols:  # schema before 2026-11-13 (version 2) had no owner's note
+            with self.conn:
+                self.conn.execute("alter table measurements add column note text")
 
-    def add(self, m: Measurement, device: str, received_at: str | None = None) -> bool:
+    def add(self, m: Measurement, device: str, received_at: str | None = None,
+            note: str | None = None) -> bool:
         """store a measurement; returns False if this reading was already stored.
 
-        ``received_at`` defaults to now; an import passes the original time along.
+        ``received_at`` defaults to now; an import passes the original time and
+        the owner's note along.
         """
         try:
             with self.conn:
                 self.conn.execute(
                     "insert into measurements (device, user, measured_at, received_at, "
-                    "systolic, diastolic, map_field, pulse, flags, raw_hex) "
-                    "values (?,?,?,?,?,?,?,?,?,?)",
+                    "systolic, diastolic, map_field, pulse, flags, raw_hex, note) "
+                    "values (?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         device,
                         m.user,
@@ -91,11 +102,28 @@ class Store:
                         m.pulse,
                         ",".join(m.flags),
                         m.raw.hex(),
+                        note or None,
                     ),
                 )
         except sqlite3.IntegrityError:
             return False
         return True
+
+    def set_note(self, reading_id: int, note: str | None) -> bool:
+        """the owner's note on a reading; empty or None clears it. False if there is no such id."""
+        with self.conn:
+            cur = self.conn.execute("update measurements set note = ? where id = ?",
+                                    ((note or "").strip() or None, reading_id))
+        return cur.rowcount == 1
+
+    def _fill_note(self, m: Measurement, device: str, note: str) -> None:
+        """give the stored copy of ``m`` this note, unless it already has one."""
+        with self.conn:
+            self.conn.execute(
+                f"update measurements set note = ? where {_SAME_READING} and coalesce(note, '') = ''",
+                (note, device, m.user or "", m.timestamp.isoformat(sep=" ") if m.timestamp else "",
+                 m.systolic, m.diastolic, m.pulse if m.pulse is not None else -1),
+            )
 
     def all(self, user: str | None = None) -> list[sqlite3.Row]:
         sql = "select * from measurements"
@@ -117,8 +145,9 @@ class Store:
 
         every reading is re-parsed from its ``raw_hex``, so the android export
         (which lacks ``map_field``) and this tool's own both work, and the usual
-        deduplication applies. ``received_at`` and ``device`` are taken from the
-        file. returns (new, already stored, unreadable rows).
+        deduplication applies. ``received_at``, ``device`` and ``note`` are taken
+        from the file; a reading that is already stored without a note gets the
+        file's. returns (new, already stored, unreadable rows).
         """
         new = dup = bad = 0
         for row in csv.DictReader(lines):
@@ -127,8 +156,12 @@ class Store:
             except (KeyError, TypeError, ValueError, ProtocolError):
                 bad += 1
                 continue
-            if self.add(m, row.get("device") or "?", row.get("received_at") or None):
+            device = row.get("device") or "?"
+            note = (row.get("note") or "").strip()
+            if self.add(m, device, row.get("received_at") or None, note):
                 new += 1
             else:
                 dup += 1
+                if note:
+                    self._fill_note(m, device, note)
         return new, dup, bad

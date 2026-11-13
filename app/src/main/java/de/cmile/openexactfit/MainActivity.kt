@@ -366,6 +366,7 @@ fun App(vm: SyncViewModel = viewModel()) {
                     showUser = state.userFilter == null,
                     userName = { state.userName(it) },
                     onDelete = { vm.delete(it) },
+                    onNote = { id, note -> vm.setNote(id, note) },
                 )
             }
         }

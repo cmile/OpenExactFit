@@ -69,6 +69,7 @@
     <string name="detail_received">Empfangen %1$s</string>
     <string name="detail_monitor">Messgerät %1$s</string>
     <string name="detail_no_flags">Keine Hinweise vom Messgerät</string>
+    <string name="note_label">Notiz</string>
     <string name="close">Schließen</string>
     <string name="delete">Löschen</string>
     <string name="delete_title">Diese Messung löschen?</string>

@@ -131,6 +131,11 @@ class SyncViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** the owner's note on a reading; the store's change signal reloads the list. */
+    fun setNote(id: Long, note: String) {
+        viewModelScope.launch { withContext(Dispatchers.IO) { store.setNote(id, note) } }
+    }
+
     /** reads a csv export (ours or the python tool's) from a document uri; null when the file cannot be read. */
     suspend fun importCsv(context: Context, uri: Uri): MeasurementStore.ImportResult? = withContext(Dispatchers.IO) {
         val text = runCatching {

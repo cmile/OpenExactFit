@@ -81,6 +81,7 @@
     <string name="detail_received">Received %1$s</string>
     <string name="detail_monitor">Monitor %1$s</string>
     <string name="detail_no_flags">No warnings from the monitor</string>
+    <string name="note_label">Note</string>
     <string name="close">Close</string>
     <string name="delete">Delete</string>
     <string name="delete_title">Delete this reading?</string>

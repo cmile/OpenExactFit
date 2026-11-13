@@ -148,7 +148,7 @@ def test_store_migrates_raw_hex_key(tmp_path):
     store = Store(path)
     rows = store.all()
     assert [r["received_at"] for r in rows] == ["r1", "r3"]  # first copy wins
-    assert store.conn.execute("pragma user_version").fetchone()[0] == 2
+    assert store.conn.execute("pragma user_version").fetchone()[0] == 3
     assert store.add(protocol.parse_measurement(bytes.fromhex("1e840056000000ea07010f1509004e00000000")), "x") is False
     Store(path)  # migrating twice is a no-op
 

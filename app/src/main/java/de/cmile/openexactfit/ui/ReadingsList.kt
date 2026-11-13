@@ -13,7 +13,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -85,6 +90,7 @@ fun ReadingsList(
     showUser: Boolean,
     userName: (String?) -> String,
     onDelete: (Long) -> Unit,
+    onNote: (Long, String) -> Unit,
 ) {
     var selected by remember { mutableStateOf<StoredReading?>(null) }
     LazyColumn {
@@ -101,6 +107,7 @@ fun ReadingsList(
             reading = r,
             userName = userName(r.user),
             onDelete = { onDelete(r.id); selected = null },
+            onNote = { onNote(r.id, it); selected = null },
             onDismiss = { selected = null },
         )
     }
@@ -133,6 +140,10 @@ private fun ReadingRow(r: StoredReading, userName: String?, onClick: () -> Unit)
         Column(modifier = Modifier.weight(1f)) {
             if (userName != null) Text(userName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (flags.isNotEmpty()) Text(flags, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            if (!r.note.isNullOrBlank()) Text(
+                r.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
+            )
         }
         CategoryDot(Category.of(r.systolic, r.diastolic))
         Spacer(Modifier.width(8.dp))
@@ -149,14 +160,25 @@ fun CategoryDot(category: Category) {
 }
 
 @Composable
-private fun ReadingDialog(reading: StoredReading, userName: String, onDelete: () -> Unit, onDismiss: () -> Unit) {
+private fun ReadingDialog(
+    reading: StoredReading,
+    userName: String,
+    onDelete: () -> Unit,
+    onNote: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
     var confirmDelete by remember { mutableStateOf(false) }
     val r = reading
+    var note by remember(r.id) { mutableStateOf(r.note.orEmpty()) }
+    val noteChanged = note.trim() != r.note.orEmpty()
+    // while the note is being typed the keyboard takes half the screen: the technical lines
+    // make way so the save button stays above it
+    var editing by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.detail_title, r.systolic, r.diastolic)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 val category = Category.of(r.systolic, r.diastolic)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CategoryDot(category)
@@ -172,16 +194,29 @@ private fun ReadingDialog(reading: StoredReading, userName: String, onDelete: ()
                     if (flags.isEmpty()) stringResource(R.string.detail_no_flags) else flags,
                     color = if (flags.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
                 )
-                Text(stringResource(R.string.detail_monitor, r.device), style = MaterialTheme.typography.bodySmall)
-                Text(r.rawHex, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                Text(
-                    stringResource(R.string.category_scale),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text(stringResource(R.string.note_label)) },
+                    maxLines = 4,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).onFocusChanged { editing = it.isFocused },
                 )
+                if (!editing) {
+                    Text(stringResource(R.string.detail_monitor, r.device), style = MaterialTheme.typography.bodySmall)
+                    Text(r.rawHex, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                    Text(
+                        stringResource(R.string.category_scale),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+        // one button: it saves when the note was edited, otherwise it just closes
+        confirmButton = {
+            if (noteChanged) TextButton(onClick = { onNote(note) }) { Text(stringResource(R.string.save)) }
+            else TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+        },
         dismissButton = {
             TextButton(onClick = { confirmDelete = true }) {
                 Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
